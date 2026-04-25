@@ -120,79 +120,88 @@ If the user says "give me everything", "skip questions", "express mode", or simi
 
 If the main dynamic is GROWTH hitting an external limit, it is LtG, not StB. Shifting the Burden requires `capability` / `skill` / `ownership` to be eroding.
 
-## Mermaid render rules
+## Two-block diagram rules
 
-Goal: the diagram is **centered on the stock-and-flow pipe**. Loops are **secondary** — abstracted into single labeled arcs that return to the stock. Auxiliaries (workload, quality, recommendations, etc.) do NOT appear in the diagram; they live as text in §6 Simulation Prep.
+Output **two Mermaid blocks** in §7, mirroring how SD textbooks teach: one Stock-and-Flow Diagram (SFD) showing the pipe, and one Causal Loop Diagram (CLD) showing the loops and auxiliaries. Each block stays small and renders cleanly; together they communicate the full structure.
 
-Visual hierarchy:
-1. **Primary (thick, solid)**: horizontal pipe `Src ==> In ==> Stock ==> Out ==> Snk`.
-2. **Secondary (thin, dashed, colored)**: loop arcs from Stock → loop label pill → Stock.
-3. **No auxiliaries** in the diagram itself.
+Why two blocks: Mermaid (any engine) cannot reliably keep a horizontal pipe AND place secondary loop pills above/below the stock — layout always degrades. Splitting them lets the SFD stay clean and the CLD be a proper causal diagram.
 
-Rules:
-- Use `flowchart TB` at the top level. The pipe lives inside a `subgraph pipe [" "]` with `direction LR`. Loop pills are top-level siblings (Rloop above the pipe, Bloop below) — this forces the pipe to stay horizontally aligned and the loops to sit above/below the stock.
+### Block 1 — SFD (pipe only)
+
+- Use `flowchart LR`.
 - **Source/Sink (cloud)**: `Src(("☁")):::cloud`, `Snk(("☁")):::cloud`.
-- **Stock**: `S["Name<br/>= 50"]:::stock` — sharp rectangle, thick border. **No** `**bold**` markdown — Mermaid does not parse it.
-- **Flow (rate label on the pipe)**: `In["Name<br/>units/mo"]:::rate` — node with transparent fill and stroke. The rate label sits ON the thick arrow.
-- **Material flow**: thick `==>` along the pipe — only here, only inside the `pipe` subgraph.
-- **Loop label pill**: `Rloop["R: name"]:::loopR` and `Bloop["B: name"]:::loopB` — small colored pill carrying the loop name. Declared at top level, OUTSIDE the pipe subgraph.
-- **Loop arc**: `S -.-> Rloop` then `Rloop -.-> S` — two dashed edges. Declared at top level (cross-subgraph). Color via `linkStyle` (R cyan, B orange, dasharray 5 5).
-- **Hide the pipe subgraph border**: `style pipe fill:transparent,stroke:transparent`.
-- **Do NOT** put auxiliaries in the diagram. They belong in §6 as symbolic formulas.
-- **Do NOT** create floating loop-name nodes via `R1{{...}}` — the pill IS the loop label.
+- **Stock**: `S["Name<br/>= 50"]:::stock` — sharp rectangle, thick border. **No** `**bold**` markdown.
+- **Flow (rate label on the pipe)**: `In["Name<br/>units/mo"]:::rate` — transparent fill and stroke.
+- **Material flow**: thick `==>` along the entire pipe: `Src ==> In ==> S ==> Out ==> Snk`.
+- **Do NOT** put auxiliaries or loop pills here. The block is the pipe, period.
 
-Mandatory `classDef` block:
+### Block 2 — CLD (loops + auxiliaries)
+
+- Use `flowchart LR`.
+- **Stock**: same `:::stock` class — same rectangle as in Block 1.
+- **Auxiliaries** (recommendations, load, quality, etc., AND the inflow/outflow rates as variables): stadium `A(["Name"]):::aux`.
+- **Causal links**: thin dashed `-.->` colored by loop. Label edges with `R` or `B`.
+- **R-loop edges** styled with `linkStyle N,M,K stroke:#06b6d4,stroke-width:1.5px,stroke-dasharray:5 5`.
+- **B-loop edges** styled with `stroke:#f97316`.
+- Each loop closes back to the stock — trace through the auxiliaries the user named.
+- Optional polarity: append `(+)` or `(−)` to the edge label only when polarity is non-obvious.
+- ≤8 nodes per loop in the CLD. If a loop is more complex, split it.
+
+Mandatory `classDef` block (used by both):
 ```
 classDef stock fill:#0f172a,stroke:#38bdf8,stroke-width:3px,color:#f1f5f9
 classDef cloud fill:transparent,stroke:#475569,stroke-width:1.5px,stroke-dasharray:4 3,color:#94a3b8
 classDef rate fill:transparent,stroke:transparent,color:#e2e8f0
-classDef loopR fill:#082f3a,stroke:#06b6d4,stroke-width:1px,color:#67e8f9
-classDef loopB fill:#3a1a08,stroke:#f97316,stroke-width:1px,color:#fdba74
+classDef aux fill:transparent,stroke:#64748b,stroke-width:1px,color:#cbd5e1
 ```
 
-- ≤8 nodes total (5 pipe + up to 3 loop pills).
-- 0-indexed `linkStyle` numbers in code order. Material-flow `==>` edges count too.
+Russian (or other non-Latin) labels are fine. `<br/>` for line breaks. Edge indices are 0-based per block.
 
-Layout note: the TB-with-LR-subgraph trick reliably puts loops above/below and keeps the pipe horizontal in modern Mermaid renderers. If you see the pipe collapse vertically, your renderer doesn't honor `direction LR` inside a subgraph — fall back to a single `flowchart LR` and accept side-placed loop pills.
+## R+B template (Limits to Growth)
 
-## R+B template (Limits to Growth, abstracted)
+**SFD (pipe):**
 
 ```mermaid
-flowchart TB
+flowchart LR
   classDef stock fill:#0f172a,stroke:#38bdf8,stroke-width:3px,color:#f1f5f9
   classDef cloud fill:transparent,stroke:#475569,stroke-width:1.5px,stroke-dasharray:4 3,color:#94a3b8
   classDef rate fill:transparent,stroke:transparent,color:#e2e8f0
-  classDef loopR fill:#082f3a,stroke:#06b6d4,stroke-width:1px,color:#67e8f9
-  classDef loopB fill:#3a1a08,stroke:#f97316,stroke-width:1px,color:#fdba74
 
-  Rloop["R: growth"]:::loopR
+  Src(("☁")):::cloud
+  In["Inflow<br/>units/mo"]:::rate
+  S["Stock<br/>= 50"]:::stock
+  Out["Outflow<br/>units/mo"]:::rate
+  Snk(("☁")):::cloud
 
-  subgraph pipe [" "]
-    direction LR
-    Src(("☁")):::cloud
-    In["Inflow<br/>units/mo"]:::rate
-    S["Stock<br/>= 50"]:::stock
-    Out["Outflow<br/>units/mo"]:::rate
-    Snk(("☁")):::cloud
-    Src ==> In
-    In ==> S
-    S ==> Out
-    Out ==> Snk
-  end
+  Src ==> In
+  In ==> S
+  S ==> Out
+  Out ==> Snk
+```
 
-  Bloop["B: limit"]:::loopB
+**CLD (loops):**
 
-  S -.-> Rloop
-  Rloop -.-> S
-  S -.-> Bloop
-  Bloop -.-> S
+```mermaid
+flowchart LR
+  classDef stock fill:#0f172a,stroke:#38bdf8,stroke-width:3px,color:#f1f5f9
+  classDef aux fill:transparent,stroke:#64748b,stroke-width:1px,color:#cbd5e1
 
-  style pipe fill:transparent,stroke:transparent
+  S["Stock"]:::stock
+  Amp(["Amplifier"]):::aux
+  Inrate(["Inflow rate"]):::aux
+  Lim(["Limiter"]):::aux
+  Outrate(["Outflow rate"]):::aux
 
-  linkStyle 4 stroke:#06b6d4,stroke-width:1.5px,stroke-dasharray:5 5
-  linkStyle 5 stroke:#06b6d4,stroke-width:1.5px,stroke-dasharray:5 5
-  linkStyle 6 stroke:#f97316,stroke-width:1.5px,stroke-dasharray:5 5
-  linkStyle 7 stroke:#f97316,stroke-width:1.5px,stroke-dasharray:5 5
+  S -.->|R| Amp
+  Amp -.->|R| Inrate
+  Inrate -.->|R| S
+
+  S -.->|B| Lim
+  Lim -.->|B| Outrate
+  Outrate -.->|B| S
+
+  linkStyle 0,1,2 stroke:#06b6d4,stroke-width:1.5px,stroke-dasharray:5 5
+  linkStyle 3,4,5 stroke:#f97316,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
 ## Worked example — Stanislav's case (interactive flow)
@@ -236,42 +245,51 @@ flowchart TB
 
 **6. Simulation (W3).** Stocks: Clients=50, Staff=5. Flows: Inflow = Clients × wom_rate × (1−saturation); Outflow = Clients × churn_rate(Quality). **Auxiliaries (kept out of diagram)**: Load = Clients/Staff; Quality = f(Load). Parameters: wom_rate (5-15%/qtr), load threshold (8-15 clients/staff), hiring delay (2-4 mo), saturation (10-30%). Horizon 24 mo, step 1 mo.
 
+**SFD:**
+
 ```mermaid
-flowchart TB
+flowchart LR
   classDef stock fill:#0f172a,stroke:#38bdf8,stroke-width:3px,color:#f1f5f9
   classDef cloud fill:transparent,stroke:#475569,stroke-width:1.5px,stroke-dasharray:4 3,color:#94a3b8
   classDef rate fill:transparent,stroke:transparent,color:#e2e8f0
-  classDef loopR fill:#082f3a,stroke:#06b6d4,stroke-width:1px,color:#67e8f9
-  classDef loopB fill:#3a1a08,stroke:#f97316,stroke-width:1px,color:#fdba74
 
-  Rloop["R: word-of-mouth"]:::loopR
+  Src(("☁")):::cloud
+  In["Новые заявки<br/>клиентов/мес"]:::rate
+  S["Клиенты<br/>= 50"]:::stock
+  Out["Отток<br/>клиентов/мес"]:::rate
+  Snk(("☁")):::cloud
 
-  subgraph pipe [" "]
-    direction LR
-    Src(("☁")):::cloud
-    In["Новые заявки<br/>клиентов/мес"]:::rate
-    S["Клиенты<br/>= 50"]:::stock
-    Out["Отток<br/>клиентов/мес"]:::rate
-    Snk(("☁")):::cloud
-    Src ==> In
-    In ==> S
-    S ==> Out
-    Out ==> Snk
-  end
+  Src ==> In
+  In ==> S
+  S ==> Out
+  Out ==> Snk
+```
 
-  Bloop["B: capacity"]:::loopB
+**CLD (R: word-of-mouth, B: capacity):**
 
-  S -.-> Rloop
-  Rloop -.-> S
-  S -.-> Bloop
-  Bloop -.-> S
+```mermaid
+flowchart LR
+  classDef stock fill:#0f172a,stroke:#38bdf8,stroke-width:3px,color:#f1f5f9
+  classDef aux fill:transparent,stroke:#64748b,stroke-width:1px,color:#cbd5e1
 
-  style pipe fill:transparent,stroke:transparent
+  S["Клиенты"]:::stock
+  Refs(["Рекомендации"]):::aux
+  Inrate(["Новые заявки"]):::aux
+  Load(["Нагрузка"]):::aux
+  Q(["Качество"]):::aux
+  Outrate(["Отток"]):::aux
 
-  linkStyle 4 stroke:#06b6d4,stroke-width:1.5px,stroke-dasharray:5 5
-  linkStyle 5 stroke:#06b6d4,stroke-width:1.5px,stroke-dasharray:5 5
-  linkStyle 6 stroke:#f97316,stroke-width:1.5px,stroke-dasharray:5 5
-  linkStyle 7 stroke:#f97316,stroke-width:1.5px,stroke-dasharray:5 5
+  S -.->|R| Refs
+  Refs -.->|R| Inrate
+  Inrate -.->|R| S
+
+  S -.->|B| Load
+  Load -.->|B| Q
+  Q -.->|B| Outrate
+  Outrate -.->|B| S
+
+  linkStyle 0,1,2 stroke:#06b6d4,stroke-width:1.5px,stroke-dasharray:5 5
+  linkStyle 3,4,5,6 stroke:#f97316,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
 *Ready to test this in W3?*
