@@ -1,0 +1,10 @@
+{
+  "name": "systems-thinking-skills",
+  "description": "Claude Code skills for systems thinking: hand-drawn stock-flow / causal-loop diagram critique, system archetype identification (Limits to Growth, Shifting the Burden, Fixes that Fail), and Meadows leverage point analysis. From the AI + Systems Thinking course (Empatika).",
+  "version": "0.1.0",
+  "author": {
+    "name": "Bayram Annakov",
+    "email": "bayram@onsa.ai"
+  },
+  "keywords": ["systems-thinking", "stock-flow", "causal-loop-diagram", "system-archetypes", "limits-to-growth", "shifting-the-burden", "fixes-that-fail", "meadows", "leverage-points", "education", "skills"]
+}

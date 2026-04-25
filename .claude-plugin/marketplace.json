@@ -1,0 +1,13 @@
+{
+  "name": "systems-thinking-skills",
+  "owner": {
+    "name": "Bayram Annakov"
+  },
+  "plugins": [
+    {
+      "name": "ai-systems-coach",
+      "source": "./",
+      "description": "Critique a hand-drawn stock-flow / causal-loop diagram, identify the system archetype (Limits to Growth, Shifting the Burden, Fixes that Fail), and surface Meadows leverage points. Refuses to draw the diagram for you — drawing is the act of thinking."
+    }
+  ]
+}
