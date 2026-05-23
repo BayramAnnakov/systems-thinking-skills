@@ -142,6 +142,138 @@ Skill MUST refuse to produce ranking. Output:
 
 ---
 
+## Test 4: Wrong-direction detection (Meadows' thesis test)
+
+### Input
+
+**Goal:** "Reach 100k MRR by Q4."
+
+**Model:**
+- Stocks: paid_users, support_load, churn_pool
+- Flows: signup_rate (driven by ad_spend × conversion_rate), churn_rate (driven by support_response_time × product_quality)
+- Parameters: ad_spend ($/wk, currently 5000), conversion_rate (0.03), support_team_size (3 people), product_quality_index (0.7), price_per_seat ($25)
+- Feedback loops: R1 — more paid_users → more revenue → more ad_spend → more paid_users (reinforcing). B1 — more paid_users → more support_load → slower support_response → higher churn (balancing). No cap on signup_rate.
+- No stock of variation; no selection mechanism.
+
+### Expected skill output (key checks, not full text)
+
+**Phase 2.5 promotion** — `ad_spend` and `conversion_rate` both set the gain of loop R1 → promote to knob 7, not knob 12.
+
+**Candidate that surfaces the wrong-direction insight** (likely Candidate #1 or #2):
+
+```
+LEVERAGE CANDIDATE #1
+Meadows knob: 7 (Reinforcing-loop gain) — promoted from knob 12 because ad_spend sets the gain of loop R1
+What to change: ad_spend per week
+Intuitive push: INCREASE ad_spend — more spend → more signups → more revenue → faster path to 100k MRR
+Correct push: REDUCE ad_spend (or cap it relative to current support capacity) until support_response_time and product_quality_index stabilize
+Why intuition reverses it: B1 (support → churn) saturates before R1 does. Pumping more users in faster than support can absorb them blows up churn, eats the new MRR, and you spend more to stay in the same place. Meadows' fishery example in reverse — pushing harder on the gain-up direction collapses the loop you're trying to grow.
+Why it has leverage: Reducing gain on R1 lets the balancing loop catch up, which is the necessary condition for the reinforcing loop to actually compound rather than oscillate or collapse.
+First move (knob ≤6 → this month, not 2-week test): cap ad_spend at the level that keeps support_response_time under your churn-trigger threshold for 4 consecutive weeks. Write the cap down as a rule.
+Caveat: Slowing growth feels like losing; investor / founder ego will resist.
+Pattern: success-to-successful (if left unchecked, fastest-growing channel eats the support budget of slower channels and the whole portfolio collapses)
+```
+
+### Pass criteria
+- ✅ Phase 2.5 promotion explicitly shown in the `Meadows knob` line
+- ✅ `Intuitive push` and `Correct push` are opposite — and the skill explains why
+- ✅ `Correct push` for knob-7 candidate defaults to REDUCE
+- ✅ Pattern correctly identified
+- ✅ First move is a one-month commitment, not a 2-week experiment
+
+---
+
+## Test 5: Stated-vs-enacted goal divergence
+
+### Input
+
+**Goal:** "Build deep, durable customer relationships with our first 50 design-partner customers."
+
+**Model:**
+- Stocks: leads_in_pipeline, MRR, signed_customers
+- Flows: outbound_rate (driven by SDR_count), close_rate (driven by demo_quality × price_discount), expansion_rate (driven by usage × upsell_offers)
+- Parameters: SDR_count (4), demo_quality (0.8), price_discount (0.15), upsell_offers_per_month (2), CSM_count (0 — no customer success role yet)
+- Feedback loops: R1 — MRR → more SDR hires → more outbound → more signed → more MRR. No closed loop touching customer health, retention quality, or relationship depth.
+- Encoded goal in model: NONE explicit; the prominent readout is MRR.
+
+### Expected skill output (key checks)
+
+**Phase 1.5 (structural noun-match):** Goal noun is "deep, durable customer relationships." Model tracks `signed_customers` (count) and `MRR` ($). Relationships-depth noun is **absent**. → MISMATCH.
+
+**Phase 1.6 (stated vs enacted):** Reading structure only — what gets amplified? MRR → SDRs → outbound → signed → MRR. Enacted goal = **transactional acquisition velocity**. Stated goal = deep relationships. → DIVERGENT.
+
+Both checks fire. Candidate #1 takes the structural fix (Phase 1.5), Candidate #2 takes the semantic divergence (Phase 1.6).
+
+```
+LEVERAGE CANDIDATE #1
+Meadows knob: 10 (Structure — add stock for goal noun)
+What to change: Add a stock `relationship_health` (composite: usage_depth × CSM_touchpoints × NPS) and a readout for it. No new flows yet — just make the goal noun visible in the model.
+Intuitive push: skip this step, just "do customer success better"
+Correct push: encode the noun structurally BEFORE optimizing — otherwise every later knob you turn is optimizing MRR by accident
+Why intuition reverses it: when the goal noun isn't in the model, every "improvement" silently reverts to optimizing the noun that IS in the model (here, MRR), regardless of what you say you're doing.
+Why it has leverage: makes the goal noun observable, which is the precondition for any feedback loop that controls it.
+First move (knob ≤6 → this month): pick the 3 indicators you'll use as the composite, name them, add the stock to the model and the dashboard. Don't tune yet.
+Caveat: composite metrics can be gamed; pick indicators that resist trivial optimization (e.g., depth-of-feature-use beats login-count).
+Pattern: meter-in-basement (the relationship state is happening but isn't visible to the actors making decisions about it)
+```
+
+```
+LEVERAGE CANDIDATE #2
+Meadows knob: 3 (Goals — name the stated/enacted divergence)
+What to change: the implicit system goal. Structure currently enacts "maximize MRR-per-quarter via transactional acquisition." Stated goal is "deep relationships with first 50 design-partner customers." Pick one and re-wire.
+Intuitive push: keep both — claim deep relationships AND chase MRR
+Correct push: cap MRR growth or cap headcount of SDRs until CSM_count ≥ some ratio of signed_customers; OR explicitly demote the relationship goal to "secondary, after we hit 100 customers."
+Why intuition reverses it: founders defend the dual narrative because both feel important; the structure keeps quietly winning anyway because R1 is the only closed loop touching MRR.
+Why it has leverage: as long as the enacted goal is unchallenged, every other intervention will get absorbed into serving it.
+First move (this month): write down which goal wins on conflict. Tell the team. Add the conflict-resolution rule to the sales / CS playbook.
+Caveat: choosing "relationships first" likely slows MRR — be honest with whoever you report to before, not after.
+```
+
+### Pass criteria
+- ✅ Both Phase 1.5 (structural MISMATCH) and Phase 1.6 (DIVERGENT) fire
+- ✅ Candidate #1 = structural noun fix (Phase 1.5); Candidate #2 = semantic divergence fix (Phase 1.6)
+- ✅ Pattern `meter-in-basement` correctly tagged on Candidate #1
+- ✅ Direction fields populated on both candidates and they are opposite to intuition
+
+---
+
+## Test 6: Accountability gap (meter-in-basement)
+
+### Input
+
+**Goal:** "Cut weekly cloud bill by 30% by end of quarter without slowing feature velocity."
+
+**Model:**
+- Stocks: monthly_cloud_spend, feature_velocity, on_call_load
+- Flows: spend_growth (driven by per-team resource requests), spend_reduction (driven by infra team optimization sprints)
+- Parameters: per_team_budget_visibility (CURRENTLY: only the CTO sees per-team spend), num_teams (8), infra_team_size (3)
+- Feedback loops: R1 — more spend → more on_call → more reactive provisioning → more spend (reinforcing). No loop closes from cost back to the engineering team making the deploy decisions.
+
+### Expected skill output (key check)
+
+**Phase 1 accountability-gap detection:** Decision = "provision N instances for new service." Actor = product engineering team. Consequence = cloud bill. Actor visibility into consequence = none (per `per_team_budget_visibility` parameter — only CTO sees the per-team breakdown).
+
+```
+LEVERAGE CANDIDATE #1
+Meadows knob: 6 (Information flows — restore missing feedback)
+What to change: per_team_budget_visibility parameter — flip from CTO-only to per-team-weekly. Add a single auto-posted Slack message every Monday: "Team X spent $Y last week, $Z week-over-week." (This adds an info-flow node — allowed structural addition.)
+Intuitive push: do nothing on info; instead, hire more infra people or impose a top-down budget cap
+Correct push: just put the meter in the front hall — let each team see its own spend, weekly, in a place they already look
+Why intuition reverses it: the assumption is that engineers "don't care about cost" — actually they don't see it. Dutch electricity meter result: same actors, same system, 30% reduction just from visibility. The cheap intervention beats the expensive one.
+Why it has leverage: closes a missing feedback loop without changing rules, hiring, or rebuilding infrastructure. Meadows' chapter calls this the most common and cheapest high-leverage class.
+First move (knob ≤6 → this month): pick the 3 most expensive teams, send them last week's number on Monday, repeat for 4 weeks. Measure spend delta.
+Caveat: visibility without context can blame innocent teams (research workloads cost more by design). Annotate the post: "Cost ≠ wastefulness — context: research vs prod."
+Pattern: meter-in-basement (literal application of Meadows' Dutch housing example)
+```
+
+### Pass criteria
+- ✅ Accountability gap detected in Phase 1 extraction
+- ✅ Candidate #1 uses the allowed structural-addition exception for knob 6
+- ✅ Pattern `meter-in-basement` explicitly named and cited as direct application of Meadows
+- ✅ First move is a one-month rollout, not a 2-week experiment
+
+---
+
 ## Test execution notes (for Bayram pre-workshop)
 
 Run all three tests in:
