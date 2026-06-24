@@ -157,11 +157,46 @@
   .test{margin:0 0 14px;padding-bottom:14px;border-bottom:1px solid var(--line)} .test:last-child{border:none;margin:0;padding:0}
   .test .t{font-size:13.5px;font-weight:600;color:var(--ink)} .test .d{font-size:12.5px;color:var(--muted);margin-top:3px}
   .test .rank{font-family:var(--mono);font-size:10px;color:var(--target);float:right;border:1px solid rgba(245,165,36,.4);border-radius:5px;padding:1px 7px;margin-left:8px}
+  /* data request — "what I need from you to turn this map into a verdict" */
+  .dreq{margin:0 0 14px;padding-bottom:14px;border-bottom:1px solid var(--line)} .dreq:last-child{border:none;margin:0;padding:0}
+  .dreq .w{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .dreq .rank{font-family:var(--mono);font-size:10px;color:var(--target);border:1px solid rgba(245,165,36,.4);border-radius:5px;padding:1px 7px;margin-left:6px}
+  .dreq .i{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .dreq .meta{font-family:var(--mono);font-size:10px;color:var(--faint);margin-top:5px;display:flex;gap:8px 14px;flex-wrap:wrap}
+  .dreq .gap{text-transform:uppercase;letter-spacing:.08em;color:var(--k-hyp)}
   .census-bar{display:flex;height:30px;border-radius:8px;overflow:hidden;margin:6px 0 12px;border:1px solid var(--line)}
   .census-bar span{display:block;height:100%}
   .census-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-family:var(--mono);font-size:11px;color:var(--muted)}
   .census-key i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:5px;vertical-align:middle}
   .census .bottom{font-size:13.5px;color:#dfe2e6;margin-top:14px;line-height:1.5;border-left:2px solid var(--target);padding-left:12px}
+
+  /* narrative — the "read first" memo, rendered at the top so the artifact self-explains */
+  .narrative{background:linear-gradient(180deg,rgba(245,165,36,.07),transparent 70%),var(--panel);border:1px solid var(--line);border-left:3px solid var(--target);border-radius:14px;padding:4px 24px 6px;margin:26px 0 0}
+  .narrative>summary{cursor:pointer;font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--target);padding:16px 0;list-style:none;user-select:none}
+  .narrative>summary::-webkit-details-marker{display:none}
+  .narrative>summary::before{content:"▸ ";font-size:11px}
+  .narrative[open]>summary::before{content:"▾ "}
+  .narrative h4{font-size:15.5px;font-weight:600;color:var(--ink);margin:18px 0 4px;letter-spacing:-.01em}
+  .narrative h4:first-of-type{margin-top:2px}
+  .narrative p{font-size:14px;line-height:1.62;color:#cfd3da;margin:0 0 8px;max-width:76ch}
+  .narrative .nfoot{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin:14px 0 12px}
+
+  /* lever portfolio — the additive paths to a TARGET apex (hidden for a symptom apex) */
+  .levers{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;margin-top:10px}
+  .lever{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:15px 17px;border-top:3px solid var(--k-meas)}
+  .lever.dropped{opacity:.62;border-top-color:var(--faint)}
+  .lever .lh{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+  .lever .ln{font-size:14.5px;font-weight:600;color:var(--ink);line-height:1.25}
+  .lever .lpath{font-size:12px;color:var(--muted);margin-bottom:9px;line-height:1.4}
+  .lever .lsize{font-family:var(--mono);font-size:12px;color:var(--k-meas);margin-bottom:4px}
+  .lever .lbasis{font-size:11px;color:var(--faint);margin-bottom:9px;line-height:1.4}
+  .lever .lmeta{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);font-size:9.5px}
+  .lbadge{padding:1.5px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--panel-2)}
+  .lb-own{color:#9ff0c2;background:rgba(70,208,138,.16)} .lb-win{color:#bcdcff;background:rgba(91,168,245,.16)} .lb-buy{color:#f6c89a;background:rgba(224,138,74,.16)}
+  .lever .ldrop{font-size:12px;color:var(--k-hyp);margin-top:10px;border-top:1px dashed var(--line);padding-top:9px;line-height:1.45}
+  .sizing{font-size:14px;color:#e9d8b8;background:var(--target-soft);border:1px solid rgba(245,165,36,.32);border-left:3px solid var(--target);border-radius:0 10px 10px 0;padding:14px 16px;margin-top:16px;line-height:1.5}
+  .sizing b{color:var(--target)}
+
   .foot{color:var(--faint);font-family:var(--mono);font-size:11.5px;margin-top:46px;padding-top:18px;border-top:1px solid var(--line)}
 
   @media (max-width:900px){
@@ -196,7 +231,7 @@
       { "id":"A","text":"Discovery gap — the collaboration use-case is invisible in search","kind":"INFERENCE","grade":"Strong","role":"LEVER","cite":"3 competitors rank p1 for \"team workspace\"; we rank p4 for \"notes app\" only","children":[
         { "id":"A1","text":"Landing copy sells single-player notes; the team value prop is below the fold","kind":"MEASURED","grade":"Mod","cite":"Heatmap: 2.1% scroll to the \"invite your team\" section" }
       ]},
-      { "id":"N","text":"Net-new arrival rate is UNVERIFIED — analytics can't separate new orgs from returning users","kind":"CLAIM","grade":"Weak","role":"CONSTRAINT?","cite":"No org-creation event in the warehouse. Test: instrument org_created + first_invite." }
+      { "id":"N","text":"Net-new arrival rate is UNVERIFIED — analytics can't separate new orgs from returning users","kind":"CLAIM","grade":"Weak","role":"CONSTRAINT?","gap":"external","cite":"No org-creation event in the warehouse. Test: instrument org_created + first_invite." }
     ]},
     { "id":"S2","title":"Stage 2 · Activate — do they invite a teammate?","nodes":[
       { "id":"W","text":"Cold-start: an empty workspace gives a solo user no reason to invite anyone yet","kind":"INFERENCE","grade":"Strong","role":"LEVER","cite":"Invite rate jumps 3.4x once a user creates ≥3 docs (n=880)" },
@@ -234,8 +269,23 @@
     { "test":"Instrument org_created + first_invite + 2nd-member-joined events","decides":"Splits arrival-starvation from activation-leak — adjudicates N, G, W at once","rank":"#1" },
     { "test":"A/B the inline invite nudge at the ≥3-docs moment","decides":"Confirms the cold-start lever (W) is real and sizes it","rank":"#2" }
   ],
+  "dataRequest": [
+    { "want":"org_created + first_invite + 2nd-member-joined events (not currently logged)","upgrades":["N","G"],
+      "from":"add instrumentation in product analytics","kind":"external","rank":"#1",
+      "impact":"Locates the funnel constraint (arrival-starved vs activation-leak) — flips the mechanism from map to verdict" },
+    { "want":"Whether a DRI already owns team-activation today","upgrades":["R0a","M"],
+      "from":"ask the Growth + Product leads (in-head, not in any system)","kind":"ask-owner","rank":"#2",
+      "impact":"If someone already owns it, the policy constraint re-roots — confirm before re-comping" }
+  ],
   "census": { "measured":0.5,"inference":0.25,"claim":0.13,"instance":0.12,"external":0,"hypothesis":0,
-    "bottomLine":"Half measured — but the node that would locate the funnel constraint (N, arrival rate) is unverified. The POLICY constraint is settled; the mechanism constraint is a map, not a verdict. Run test #1 before building." }
+    "bottomLine":"Half measured — but the node that would locate the funnel constraint (N, arrival rate) is unverified. The POLICY constraint is settled; the mechanism constraint is a map, not a verdict. Run test #1 before building." },
+  "apexType": "symptom",
+  "narrative": [
+    { "heading":"The problem", "body":"We set a goal of 1,000 net-new team workspaces by Q4 and we're well short — but the number itself is suspect first: 61% of \"workspaces\" have a single member, so the KPI is partly counting solo users, not teams." },
+    { "heading":"What the evidence forces", "body":"The binding cause is not product polish or pricing — both were refuted in-slice (median time-to-first-workspace is 6 min; 0 of 31 churned trials ever opened the pricing page). It is policy: net-new team activation has no owner, and Growth is comped on raw signups, so the number we care about is nobody's job." },
+    { "heading":"What we know — and what we don't", "body":"Measured: the solo-workspace inflation, the single-player landing copy, the 3.4× invite lift after a user creates three docs, and the comp plan. Unmeasured and decisive: the net-new arrival rate — the warehouse logs no org-creation event, so whether we are arrival-starved or activation-leaky is still a map, not a verdict." },
+    { "heading":"What to do, and the honest risk", "body":"Name a DRI for team-activation and re-comp Growth on activated teams; don't rebuild onboarding (the drop is pre-onboarding) or auto-invite contacts (a deliverability cliff). The whole verdict rests on one node — that no DRI already owns this. If one does, the constraint re-roots to the single-player surface, and the one-query event-instrumentation pull becomes the first move." }
+  ]
 }
 </script>
 <!-- ====================== /TREE DATA ====================== -->
@@ -248,6 +298,16 @@
 </div></header>
 
 <div class="wrap">
+  <details class="narrative" id="narrative" open>
+    <summary>Read first — the diagnosis in plain words</summary>
+    <div id="narrative-body"></div>
+  </details>
+  <div id="levers-sec">
+    <h2 class="sec"><span class="n">◆</span> The levers — paths to the target</h2>
+    <p class="sec-sub">The additive paths to the number, each sized (volume × conversion → contribution). A dropped lever stays visible with its reason — a path deprioritized, not a cause refuted.</p>
+    <div class="levers" id="levers"></div>
+    <div id="sizing"></div>
+  </div>
   <div id="banner"></div>
   <div class="legend" id="legend"></div>
 
@@ -264,7 +324,11 @@
     <div class="panel"><h4>Cheapest fork-deciding tests</h4><div id="tests"></div></div>
   </div>
 
-  <h2 class="sec"><span class="n">03</span> How grounded is this?</h2>
+  <h2 class="sec" id="dreq-sec"><span class="n">03</span> What I need from you · to turn this map into a verdict</h2>
+  <p class="sec-sub">The evidence still missing — ranked by how much it would move the verdict. Each item upgrades a HYPOTHESIS node to MEASURED.</p>
+  <div class="panel" id="dreq-panel"><div id="dataRequest"></div></div>
+
+  <h2 class="sec"><span class="n">04</span> How grounded is this?</h2>
   <div class="panel census" id="census"></div>
   <p class="foot" id="foot"></p>
 </div>
@@ -415,10 +479,38 @@ rail.addEventListener('click',e=>{
 /* panels / census / foot */
 document.getElementById('negatives').innerHTML=(D.negatives||[]).map(n=>`<li>${esc(n)}</li>`).join('');
 document.getElementById('tests').innerHTML=(D.tests||[]).map(t=>`<div class="test"><div class="t">${t.rank?`<span class="rank">${esc(t.rank)}</span>`:''}${esc(t.test)}</div><div class="d">${esc(t.decides)}</div></div>`).join('');
+/* data request — hide the whole section if empty */
+const dreq=(D.dataRequest||[]);
+if(dreq.length){
+  document.getElementById('dataRequest').innerHTML=dreq.map(r=>`<div class="dreq"><div class="w">${esc(r.want)}${r.rank?`<span class="rank">${esc(r.rank)}</span>`:''}</div>${r.impact?`<div class="i">${esc(r.impact)}</div>`:''}<div class="meta">${r.kind?`<span class="gap">${esc(r.kind)}</span>`:''}${r.from?`<span>from: ${esc(r.from)}</span>`:''}${(r.upgrades&&r.upgrades.length)?`<span>upgrades: ${r.upgrades.map(esc).join(', ')}</span>`:''}</div></div>`).join('');
+}else{
+  const s=document.getElementById('dreq-sec'),p=document.getElementById('dreq-panel'),sub=s&&s.nextElementSibling;
+  if(s)s.style.display='none'; if(p)p.style.display='none'; if(sub&&sub.classList.contains('sec-sub'))sub.style.display='none';
+}
 const cs=D.census||{};const order=[["measured","MEASURED","--k-meas"],["inference","INFERENCE","--k-inf"],["hypothesis","HYPOTHESIS","--k-hyp"],["instance","INSTANCE","--k-inst"],["claim","CLAIM","--k-claim"],["external","EXTERNAL","--k-ext"]].filter(o=>cs[o[0]]>0);
 const csTot=order.reduce((a,o)=>a+(cs[o[0]]||0),0)||1; /* normalize defensively — converge sometimes emits raw counts, not fractions */
 document.getElementById('census').innerHTML=`<h4>Answer-kind census</h4><div class="census-bar">${order.map(o=>`<span style="flex:${cs[o[0]]};background:var(${o[2]})"></span>`).join('')}</div><div class="census-key">${order.map(o=>`<span><i style="background:var(${o[2]})"></i>${o[1]} ${Math.round(cs[o[0]]/csTot*100)}%</span>`).join('')}</div>${cs.bottomLine?`<div class="bottom">${esc(cs.bottomLine)}</div>`:''}`;
 document.getElementById('foot').textContent=`Why Tree · ${p.method||'Goldratt CRT'} · spine = decide, rail = follow & validate · a map of where to look, not a verdict when evidence is thin.`;
+
+/* narrative — the read-first memo at the top (hide if absent) */
+const narr=(D.narrative||[]);
+if(narr.length){document.getElementById('narrative-body').innerHTML=narr.map(s=>`<h4>${esc(s.heading)}</h4><p>${esc(s.body)}</p>`).join('')+`<div class="nfoot">↓ the interactive tree below shows the graded evidence behind each claim</div>`;}
+else{const n=document.getElementById('narrative');if(n)n.style.display='none';}
+
+/* lever portfolio — TARGET apex only (hide the whole section for a symptom apex) */
+const levers=(D.levers||[]);
+if(levers.length){
+  const sizeLine=l=>{const s=l.sizing||{};return [s.volume, s.conversion&&'× '+s.conversion, s.contribution&&'→ '+s.contribution].filter(Boolean).map(esc).join(' ');};
+  document.getElementById('levers').innerHTML=levers.map(l=>{const owb=(l.ownWinBuy||'').toLowerCase();const s=l.sizing||{};const sl=sizeLine(l);
+    return `<div class="lever ${l.role==='dropped'?'dropped':''}"><div class="lh"><span class="ln">${esc(l.name)}</span>${l.bindsConstraint?'<span class="role role-con">CONSTRAINT</span>':''}</div>`
+      +(l.path?`<div class="lpath">${esc(l.path)}</div>`:'')
+      +(sl?`<div class="lsize">${sl}</div>`:'')
+      +(s.basis?`<div class="lbasis">${esc(s.basis)}</div>`:'')
+      +`<div class="lmeta">${owb?`<span class="lbadge lb-${owb}">${esc(owb)}</span>`:''}${l.effort?`<span class="lbadge">effort ${esc(l.effort)}</span>`:''}${l.role?`<span class="lbadge">${esc(l.role)}</span>`:''}</div>`
+      +(l.role==='dropped'&&l.droppedReason?`<div class="ldrop">✕ dropped — ${esc(l.droppedReason)}</div>`:'')
+    +`</div>`;}).join('');
+  if(D.sizing)document.getElementById('sizing').innerHTML=`<div class="sizing"><b>Do the levers sum to the target?</b> ${esc(D.sizing.bottomLine||'')}${D.sizing.gapToTarget?` <span style="color:var(--muted)">· gap: ${esc(D.sizing.gapToTarget)}</span>`:''}</div>`;
+}else{const ls=document.getElementById('levers-sec');if(ls)ls.style.display='none';}
 
 /* open on the answer (answer-first), constraint path lit */
 inspectConstraint();
