@@ -157,7 +157,7 @@ Meadows: *"There are exceptions to every item that can move it up or down the or
 
 Note each promotion or demotion explicitly in the candidate output: e.g., "Meadows knob: 7 (Reinforcing-loop gain) — *promoted from knob 12* because this parameter controls the gain of loop R1."
 
-### Control zones (feasibility, made concrete)
+## Control zones (feasibility, made concrete)
 
 Every knob sits in one of three zones, and the boundaries differ by the user's role (an owner can change price; an employee can only account for it):
 
