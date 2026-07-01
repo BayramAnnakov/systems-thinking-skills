@@ -1,7 +1,6 @@
 ---
 name: why-tree
 description: Diagnose a hard problem by building an evidence-graded "Why Tree" - a Goldratt Current-Reality Tree that fans many AI agents across the problem's branch-space, grades every node by the kind of evidence behind it, refutes the weak branches, and converges on the ONE system constraint plus the cheapest test that would prove it. Use when someone asks "why is X happening / why are we falling short of a goal", wants a root-cause analysis with real rigor (not a 5-minute 5-Whys), needs to find the real bottleneck before spending build effort, or asks to "stress-test our diagnosis" / "build a current-reality tree". Bilingual triggers: "почему мы не достигаем цели", "построй дерево текущей реальности", "найди настоящее узкое место". Pairs with /constraint-finder, which returns the 5 Focusing Steps once the constraint is located. Token-heavy by design (multi-agent) - it warns and asks for a depth before launching, and only earns its cost when one careful pass could confidently pick the WRONG cause.
-argument-hint: [the problem as a gap-vs-goal + any data/files the agents may read, or "interview me"]
 ---
 
 # Why Tree
