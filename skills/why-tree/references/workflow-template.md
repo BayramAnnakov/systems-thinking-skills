@@ -1,6 +1,6 @@
 # Workflow blueprint - the engine
 
-This is the copy-paste `Workflow` script that powers Phase 2. It fans out lenses, dedups, deepens + grades, refutes, and converges. **Scale it to the chosen depth** by adjusting `LENSES`, `LOOP_UNTIL_DRY`, and the refute vote count (see the DEPTH block).
+This is the copy-paste `Workflow` script that powers Phase 2. It fans out lenses, dedups, deepens + grades, **audits the load-bearing measurements** (the raw→validated ladder), refutes, and converges. **Scale it to the chosen depth** by adjusting `LENSES`, `LOOP_UNTIL_DRY`, and the refute vote count (see the DEPTH block).
 
 The script is plain JavaScript (no TypeScript). `agent()`, `parallel()`, `pipeline()`, `phase()`, `log()` are the workflow hooks. Pass research-source paths/URLs into the agent prompts via a constant you fill in from Phase 1. Agents reach web tools (Exa/firecrawl) and Read/Grep via ToolSearch on their own.
 
@@ -22,7 +22,7 @@ The workflow must end by returning an object matching this shape. `assets/tree-t
           "kind": "INFERENCE", "grade": "Strong", "role": "LEVER",
           "cite": "web: 3 competitor listings rank; ours absent (SERP Jun)",
           "children": [
-            { "id": "A1", "text": "...", "kind": "MEASURED", "grade": "Mod", "cite": "..." }
+            { "id": "A1", "text": "...", "kind": "MEASURED", "grade": "Mod", "validation": "validated", "cite": "src:warehouse — ..." }
           ]
         }
       ]
@@ -62,6 +62,7 @@ The workflow must end by returning an object matching this shape. `assets/tree-t
   "census": { "measured": 0.45, "inference": 0.25, "hypothesis": 0.20, "claim": 0.07, "external": 0.03,
     "bottomLine": "Broad but shallow at the decision point - the constraint-locating nodes are HYPOTHESIS. Map, not verdict." },
   "apexType": "symptom",
+  "verdictStatus": "map",
   "narrative": [
     { "heading": "The problem", "body": "One-line restatement of the apex a reader sees before the tree." },
     { "heading": "What the evidence forces", "body": "The verdict/reframe in plain prose — what the graded data makes us conclude." },
@@ -70,7 +71,7 @@ The workflow must end by returning an object matching this shape. `assets/tree-t
 }
 ```
 
-`kind` ∈ MEASURED|INSTANCE|EXTERNAL|CLAIM|INFERENCE|HYPOTHESIS|FRAMING. `grade` ∈ Strong|Mod|Weak. `role` ∈ ROOT|CONSTRAINT|LEVER|NEGATIVE|REFUTED|DOWNGRADED|"" (see `answer-kinds.md`).
+`kind` ∈ MEASURED|INSTANCE|EXTERNAL|CLAIM|INFERENCE|HYPOTHESIS|FRAMING. `grade` ∈ Strong|Mod|Weak. `role` ∈ ROOT|CONSTRAINT|LEVER|NEGATIVE|REFUTED|DOWNGRADED|"" (see `answer-kinds.md`). `validation` (MEASURED nodes only) ∈ raw|validated|triangulated|contested — the raw→validated ladder from `answer-kinds.md`; `raw` caps the grade at Mod and can never be `constraint.loadBearing`. `verdictStatus` ∈ verdict|map — **computed by the orchestrator after converge, never emitted by an agent** (see step 7d): `map` unless the loadBearing node is solid.
 
 **Two apex types — and two output shapes.** `apexType` ∈ `symptom` | `target`. A **symptom** apex ("X is leaking / under-converting / broken") wants the classic CRT: converge to the ONE binding constraint. A **target** apex ("hit N by date / grow X→Y" — a number someone *chose*, reachable by several ADDITIVE paths) wants that *plus* a **lever portfolio**: the parallel paths to N, each sized, so the output is "here's the bottleneck AND here's the arithmetic for whether the levers sum to N" — not a lone bottleneck. In target mode the converge step still finds the constraint, and an extra **lever-decomposition** stage emits `levers[]` + `sizing` (below). **`narrative[]`** (both modes) is a short memo rendered at the TOP of the HTML so the artifact self-explains before anyone drills the tree.
 
@@ -102,6 +103,10 @@ const NODE = { type:'object', properties:{
   // gap (only on HYPOTHESIS/CLAIM nodes): 'in-hand' = one read over Phase-1 sources settles it (ILLEGAL to leave —
   // compute + re-grade MEASURED) · 'external' = needs data we don't have · 'experiment' = needs a test.
   gap:{type:'string', enum:['in-hand','external','experiment']},
+  // validation (MEASURED nodes only): 'raw' = pipeline unchecked (grade caps at Mod; cannot be loadBearing) ·
+  // 'validated' = passed the cleanliness checklist / curated source · 'triangulated' = two independent pipelines
+  // agree · 'contested' = two sources disagree (grade Weak; keep BOTH values in cite; reconcile via tests[]).
+  validation:{type:'string', enum:['raw','validated','triangulated','contested']},
   cite:{type:'string'}, children:{type:'array'} }, required:['text','kind','grade'] }
 const TREE_JSON_SCHEMA = { type:'object', properties:{
   apex:{type:'string'},          // SHORT undesirable-effect STATEMENT (<=140 chars; declarative, NOT a question, NOT the answer)
@@ -138,7 +143,7 @@ const TREE_JSON_SCHEMA = { type:'object', properties:{
   required:['apex','verdict','stages','roots','constraint','census'] }
 ```
 
-In the converge prompt, say explicitly: "**apex** = the undesirable-effect STATEMENT (≤140 chars, a declarative 'the bad thing', NOT a question); put the one-line answer in **verdict**; **PRESERVE THE CAUSAL CHAIN — do NOT flatten it.** 'Collapse to 3-5 roots' means *group* the branches, NOT compress a chain into a one-line root. The constraint root (`isConstraint:true`) MUST carry a nested `children[]` why-chain from the apex down to bedrock (root → because X → because Y → … → a bedrock cause: a market fact / deliberate policy / law of the domain / something outside our control), every node graded. A childless constraint root is a generation bug — the tree must read as a multi-level *tree*, not a 3-band funnel; phrase every `root[].title` and node `text` as a **declarative problem/cause statement** readable as 'X because Y' (never a topic/phase label like 'Cost denominator' or 'DM stage'); set exactly ONE root `isConstraint:true` and make `constraint.rootId` match it; keep `constraint.statement` tight. **Stages are the problem's journey/funnel phases ONLY — do NOT create a stage for apex / verdict / framing / scope content** (that belongs in `apex` + `verdict`, never a stage bucket), and use `role` values only from the enum (no invented roles like 'apex-answer'). Tag any test/recommendation that rests on an un-refuted CLAIM/HYPOTHESIS node with '(verify first)'. Set `constraint.loadBearing` = the id of the single node the constraint most rests on (its weakest-grade support — usually what the #1 cheapest test targets), and `constraint.ifFalse` = what changes if that node is wrong (which root takes over / the verdict reverts to a map). These drive the viz's stress-test. **Tag every HYPOTHESIS/CLAIM node with a `gap` ∈ in-hand|external|experiment. An `in-hand` gap is ILLEGAL at converge — it means a read over the Phase-1 sources settles it, so compute it and grade MEASURED instead of emitting it. Then build `dataRequest[]` from the `external`/`experiment` gaps ONLY: each `{want, upgrades:[real node ids it lifts], from, kind (external|experiment|ask-owner), rank, impact}`, ranked by verdict-impact ÷ cost, with #1 = whatever would locate the constraint. `dataRequest` is the 'what I need from you' shopping list (the ROI-pattern: 'I lack the data, but here are the exact numbers that answer it'); every item must reference real node ids.**"
+In the converge prompt, say explicitly: "**apex** = the undesirable-effect STATEMENT (≤140 chars, a declarative 'the bad thing', NOT a question); put the one-line answer in **verdict**; **PRESERVE THE CAUSAL CHAIN — do NOT flatten it.** 'Collapse to 3-5 roots' means *group* the branches, NOT compress a chain into a one-line root. The constraint root (`isConstraint:true`) MUST carry a nested `children[]` why-chain from the apex down to bedrock (root → because X → because Y → … → a bedrock cause: a market fact / deliberate policy / law of the domain / something outside our control), every node graded. A childless constraint root is a generation bug — the tree must read as a multi-level *tree*, not a 3-band funnel; phrase every `root[].title` and node `text` as a **declarative problem/cause statement** readable as 'X because Y' (never a topic/phase label like 'Cost denominator' or 'DM stage'); set exactly ONE root `isConstraint:true` and make `constraint.rootId` match it; keep `constraint.statement` tight. **Stages are the problem's journey/funnel phases ONLY — do NOT create a stage for apex / verdict / framing / scope content** (that belongs in `apex` + `verdict`, never a stage bucket), and use `role` values only from the enum (no invented roles like 'apex-answer'). Tag any test/recommendation that rests on an un-refuted CLAIM/HYPOTHESIS node with '(verify first)'. Set `constraint.loadBearing` = the id of the single node the constraint most rests on (its weakest-grade support — usually what the #1 cheapest test targets), and `constraint.ifFalse` = what changes if that node is wrong (which root takes over / the verdict reverts to a map). These drive the viz's stress-test. **PRESERVE every node's `validation` field exactly as the measurement audit set it — never upgrade `raw`→`validated` yourself. A node with `validation:'raw'` or `'contested'` may NOT be `constraint.loadBearing`; a `contested` node's reconciliation (which of the two pipelines is right?) must appear in `tests[]`/`dataRequest[]`.** **Tag every HYPOTHESIS/CLAIM node with a `gap` ∈ in-hand|external|experiment. An `in-hand` gap is ILLEGAL at converge — it means a read over the Phase-1 sources settles it, so compute it and grade MEASURED instead of emitting it. Then build `dataRequest[]` from the `external`/`experiment` gaps ONLY: each `{want, upgrades:[real node ids it lifts], from, kind (external|experiment|ask-owner), rank, impact}`, ranked by verdict-impact ÷ cost, with #1 = whatever would locate the constraint. `dataRequest` is the 'what I need from you' shopping list (the ROI-pattern: 'I lack the data, but here are the exact numbers that answer it'); every item must reference real node ids.**"
 
 ## The script
 
@@ -147,7 +152,7 @@ export const meta = {
   name: 'why-tree',
   description: 'Build an evidence-graded Goldratt Why Tree for a problem',
   phases: [
-    { title: 'Branch fan-out' }, { title: 'Deepen + grade' },
+    { title: 'Branch fan-out' }, { title: 'Deepen + grade' }, { title: 'Measure audit' },
     { title: 'Refute' }, { title: 'Converge' }, { title: 'Drill constraint' },
     { title: 'Levers + size' }, { title: 'Narrate' },
   ],
@@ -155,24 +160,28 @@ export const meta = {
 
 // ---- DEPTH KNOBS (set from Phase 0 choice) ----
 const APEX = args.apex
-const SOURCES = args.sources || 'web only (Exa/firecrawl)'  // Phase-1 inventory, injected into prompts
-const DEPTH = args.depth || 'standard'                       // 'standard' | 'deep'  (Quick REMOVED — for a cheap sketch, ask ONE agent, not this skill)
+const SOURCES = args.sources || 'web only (Exa/firecrawl)'  // Phase-1 inventory incl. the SOURCE REGISTRY ({id, tier, caveats} per source), injected into prompts
+const DEPTH = args.depth || 'standard'                       // 'standard' | 'deep' | 'test-plan'  (Quick REMOVED — for a cheap sketch, ask ONE agent, not this skill)
+const TEST_PLAN = DEPTH === 'test-plan'                      // decisive sources are HUMAN-ONLY → deliverable = branch-map + ranked cheapest-tests + Data Request (markdown); skips drill + the HTML machinery
 const APEX_TYPE = args.apexType || 'symptom'                 // 'symptom' (X is leaking/breaking) | 'target' (hit N by date — a chosen number reached by additive paths)
 const LEVER_MODE = APEX_TYPE === 'target'                   // target apex → ALSO decompose into additive levers + size them (a constraint tree alone hands ONE bottleneck, not a portfolio that sums to N)
 const LENSES = {
   standard: ['funnel/mechanics', 'data-skeptic', 'competitive/external', 'customer-psychology', 'economics/incentives', 'product-eng-constraint'],
   deep:     ['funnel/mechanics', 'data-skeptic', 'competitive/external', 'customer-psychology', 'economics/incentives', 'product-eng-constraint', 'metrics/measurement', 'distribution/discovery', 'org/ownership'],
+  'test-plan': ['funnel/mechanics', 'data-skeptic', 'economics/incentives', 'product-eng-constraint'],
 }[DEPTH]
-const REFUTE_VOTES = { standard: 1, deep: 3 }[DEPTH]
+const REFUTE_VOTES = { standard: 1, deep: 3, 'test-plan': 1 }[DEPTH]
 const LOOP_UNTIL_DRY = DEPTH === 'deep'
 // HARD CAPS — without these, dedup misses + loop-until-dry + the refute fan-out compound into a
 // runaway agent count (an early Deep run spawned 171 agents vs ~25-30 advertised, and the blowup
-// rate-limited and DEGRADED its own refute pass). Cap the two fan-out stages explicitly.
-const MAX_DEEPEN = { standard: 12, deep: 20 }[DEPTH]   // max branches that get a deepen agent
-const MAX_REFUTE = { standard: 8,  deep: 14 }[DEPTH]   // max load-bearing branches sent to the refute panel
+// rate-limited and DEGRADED its own refute pass). Cap the three fan-out stages explicitly.
+const MAX_DEEPEN = { standard: 12, deep: 20, 'test-plan': 8 }[DEPTH]   // max branches that get a deepen agent
+const MAX_REFUTE = { standard: 8,  deep: 14, 'test-plan': 6 }[DEPTH]   // max load-bearing branches sent to the refute panel
+const MAX_AUDIT  = { standard: 6,  deep: 10, 'test-plan': 4 }[DEPTH]   // max load-bearing MEASURED nodes sent to the pipeline audit
 
 const BRANCH_SCHEMA = { type:'object', properties:{ branches:{ type:'array', items:{ type:'object',
-  properties:{ text:{type:'string'}, stage:{type:'string'}, kind:{type:'string'}, grade:{type:'string'}, cite:{type:'string'} },
+  properties:{ text:{type:'string'}, stage:{type:'string'}, kind:{type:'string'}, grade:{type:'string'}, cite:{type:'string'},
+    validation:{type:'string', enum:['raw','validated','triangulated','contested']} },
   required:['text','stage','kind','grade','cite'] }}}, required:['branches'] }
 
 // 1) BRANCH-SPACE FAN-OUT - one agent per lens, blind to each other
@@ -184,7 +193,9 @@ const lensResults = await parallel(LENSES.map(lens => () =>
     `Evidence sources you may use: ${SOURCES}. Use web research (Exa/firecrawl) and read any named files.\n` +
     `Emit candidate WHY-branches under the apex from your lens ONLY. For each: a clear causal statement, ` +
     `the journey stage it sits in, and - critically - its answer-kind (MEASURED/INSTANCE/EXTERNAL/CLAIM/INFERENCE/HYPOTHESIS), ` +
-    `a confidence grade (Strong/Mod/Weak), and a citation (n + window for MEASURED). Do not invent numbers; if you can't measure it, mark HYPOTHESIS and name the test.`,
+    `a confidence grade (Strong/Mod/Weak), and a citation (n + window + source-registry id for MEASURED). Do not invent numbers; if you can't measure it, mark HYPOTHESIS and name the test. ` +
+    `A MEASURED number from a pipeline you have NOT verified (bots in the denominator? does the source's metric DEFINITION match your claim? seasonal window?) is validation:'raw' — say so; only a checked or curated source earns 'validated'. ` +
+    `A Δ-over-time claim ("dropped Jan→Jun") without YoY/seasonal normalization is INFERENCE/Weak at best, never MEASURED.`,
     { label:`lens:${lens}`, phase:'Branch fan-out', schema:BRANCH_SCHEMA }
   )))
 const allBranches = lensResults.filter(Boolean).flatMap(r => r.branches)
@@ -200,6 +211,7 @@ const deepened = await pipeline(merged,
     `Ask "why does this happen?" ${LOOP_UNTIL_DRY ? 'recursively until you hit bedrock (loop-until-dry)' : 'ONE level down'}.\n` +
     `Sources: ${SOURCES}. Grade EVERY child node (answer-kind + grade + citation). ` +
     `For any child you grade HYPOTHESIS or CLAIM, add a \`gap\` tag: 'in-hand' if one query/read over the sources above would settle it — in that case DON'T punt: run the read NOW and grade it MEASURED instead — 'external' if it needs data not in the sources, 'experiment' if it needs a test. Never leave an in-hand gap as a hypothesis. ` +
+    `For any child you grade MEASURED, set validation: 'raw' unless you verified the pipeline (denominator clean? definition matches the claim? window not seasonal?) or the source registry marks it curated/canonical — then 'validated'. Δ-over-time claims without YoY normalization are INFERENCE/Weak, not MEASURED. ` +
     `Return the branch as a node that KEEPS its own top-level kind + grade (+ a lensCount) AND carries a nested children[] tree — the downstream load-bearing filter reads those top-level fields, so do NOT drop them.`,
     { label:`deepen:${b.stage}`, phase:'Deepen + grade', schema: NODE_TREE_SCHEMA }
   ))
@@ -230,9 +242,45 @@ if (inHandGaps.length) {
   }
 }
 
+// 3c) MEASUREMENT AUDIT — the raw→validated ladder. Field failure mode: three MEASURED/high-confidence
+//     nodes were pipeline artifacts (bots in the denominator; an API metric whose DEFINITION didn't match
+//     the claim; a seasonal Δ read as a trend) and cost the user 4 of 6 follow-up iterations. The refute
+//     pass does NOT catch these — its prompt hunts THIN evidence, and a MEASURED/Strong artifact doesn't
+//     look thin. So: audit the PIPELINE of each load-bearing MEASURED node, and TRIANGULATE against a
+//     second registry source where one exists. Bounded by MAX_AUDIT, like the other fan-outs.
+phase('Measure audit')
+const auditPool = []
+;(function scanM(ns){ (ns||[]).forEach(n => {
+  if (n && n.kind === 'MEASURED' && (n.validation || 'raw') === 'raw') auditPool.push(n)
+  if (n) scanM(n.children)
+}) })(deepened.filter(Boolean).filter(isLoadBearing))
+const toAudit = auditPool.slice(0, MAX_AUDIT)
+if (auditPool.length > MAX_AUDIT)
+  log(`⚠ measurement audit capped at ${MAX_AUDIT}: ${auditPool.length - MAX_AUDIT} MEASURED node(s) stay validation:'raw' (grade ≤ Mod, cannot be loadBearing).`)
+await parallel(toAudit.map(n => () =>
+  agent(`Audit the MEASUREMENT PIPELINE behind this node — attack the NUMBER, not the causal logic.\n` +
+        `Node: ${JSON.stringify({ text:n.text, cite:n.cite })}\nSource registry + sources: ${SOURCES}\n` +
+        `Checklist: (1) denominator pollution — bots/internal/test traffic in the base? (2) definition mismatch — does the source's metric definition match the claim's meaning (placed-vs-paid, sessions-vs-users, gross-vs-net)? (3) window/seasonality — is any Δ-claim YoY-normalized, definition-constant across both endpoints, and above the noise floor for its n? (4) attribution — does the join actually connect this cause to this effect? (5) survivorship — does the extract pre-filter in a biasing way? (6) computation traps — join explosion (row counts before/after joins; COUNT(DISTINCT) for entities), average-of-averages, partial-vs-full period.\n` +
+        `THEN TRIANGULATE: if a SECOND independent source in the registry can compute this number, compute it and compare — disagreement in sign, or beyond ~20%, = contested. If no second source exists, triangulate by TRACING 3-5 individual records end-to-end instead (the "6/6 sampled accounts" move).\n` +
+        `Red-flag smells that demand a second look: exact round numbers, rates at exactly 0%/100%, a >50% period swing with no known cause, identical values across periods/segments, and a number that PERFECTLY confirms the branch it supports.\n` +
+        `Return {validation, triangulated, secondValue?, discrepancy?, evidence}. Stay 'raw' only if the checklist genuinely can't be run against the sources.`,
+        { label:`audit:${n.id || n.text.slice(0,24)}`, phase:'Measure audit', schema: AUDIT_SCHEMA })
+    .then(a => { if (!a) return
+      n.validation = (a.validation === 'validated' && a.triangulated) ? 'triangulated' : a.validation
+      if (n.validation === 'contested') { n.grade = 'Weak'; n.cite += ` | CONTESTED vs 2nd source: ${a.discrepancy || a.evidence}` }
+      else if (n.validation === 'raw' && n.grade === 'Strong') n.grade = 'Mod'   // unvalidated caps at Mod
+    })))
+
 // 4) ADVERSARIAL REFUTE - perspective-diverse skeptics try to KILL each load-bearing branch
 phase('Refute')
-const REFUTE_LENSES = ['data-says-otherwise','mechanism-broken','survivorship/selection','mis-attribution']
+// 'dirty-pipeline' attacks the NUMBER's pipeline (denominator/definition/window/attribution) — ordered FIRST
+// for branches resting on MEASURED evidence, because strong-looking numbers are exactly where the classic
+// angles don't look (field lesson). Costs no extra agents: it re-orders the angle list, not the vote count.
+const REFUTE_LENSES = ['data-says-otherwise','mechanism-broken','survivorship/selection','mis-attribution','dirty-pipeline']
+const restsOnMeasured = b => { let f=false; (function w(n){ if(!n||f)return; if(n.kind==='MEASURED')f=true; (n.children||[]).forEach(w); })(b); return f }
+const anglesFor = b => (restsOnMeasured(b)
+  ? ['dirty-pipeline', ...REFUTE_LENSES.filter(a => a !== 'dirty-pipeline')]
+  : [...REFUTE_LENSES.filter(a => a !== 'dirty-pipeline'), 'dirty-pipeline']).slice(0, REFUTE_VOTES + 1)
 // LOUD refute-failure guard (a live run silently ran refute on 0 branches because the deepen
 // node lost its kind/grade and isLoadBearing filtered everything out — the core value-add vanished
 // with no warning). If REFUTE_VOTES>0 and nothing is load-bearing, WARN and surface it in converge.
@@ -244,17 +292,20 @@ if (REFUTE_VOTES > 0 && lbBranches.length === 0) {
 }
 const refuted = (REFUTE_VOTES === 0 || lbBranches.length === 0) ? deepened.filter(Boolean) : await pipeline(
   lbBranches,   // cap the refute fan-out too
-  branch => parallel(
-    REFUTE_LENSES.slice(0, REFUTE_VOTES + 1).map(angle => () =>
-      agent(`Try to REFUTE this branch from the "${angle}" angle. Default to refuted=true if the evidence is thin or selection-biased. ` +
+  branch => { const angles = anglesFor(branch); return parallel(
+    angles.map(angle => () =>
+      agent(`Try to REFUTE this branch from the "${angle}" angle. ` +
+            (angle === 'dirty-pipeline'
+              ? `Attack the NUMBERS' pipeline, not the logic: who is in the denominator (bots/internal/test traffic)? does each cited metric's DEFINITION match the claim (placed-vs-paid, sessions-vs-users)? is any Δ-over-time claim seasonal/YoY-normalized? is the attribution join sound? A strong-looking MEASURED node with a dirty pipeline MUST be refuted. `
+              : `Default to refuted=true if the evidence is thin or selection-biased. Also ask: would the claim survive segmentation (Simpson/mix-shift can manufacture an aggregate trend), and — given how many branches were searched in parallel this run — is this pattern one of the expected-by-chance findings (multiple comparisons)? `) +
             `Branch: ${JSON.stringify(branch)}. Sources: ${SOURCES}.`,
             { label:`refute:${angle}`, phase:'Refute', schema: VERDICT_SCHEMA }))
   ).then(votes => {
     const kills = votes.filter(Boolean).filter(v => v.refuted)
-    if (kills.length > REFUTE_LENSES.slice(0, REFUTE_VOTES+1).length / 2)
+    if (kills.length > angles.length / 2)
       return { ...branch, role: kills.some(k=>k.demote) ? 'DOWNGRADED' : 'REFUTED', killedBy: kills.map(k=>k.evidence) }
     return branch
-  })
+  }) }
 )
 
 // 5) CONVERGE - collapse to roots + locate THE constraint (needs ALL surviving branches -> barrier)
@@ -281,17 +332,35 @@ const converged = await agent(
 //    deep recursion is spent where it counts (the constraint), not uniformly across all branches.
 phase('Drill constraint')
 const cRoot = (converged.roots || []).find(r => r.isConstraint)
-if (cRoot && (!cRoot.children || cRoot.children.length === 0)) {
+// Fire on EMPTY **or FLAT** chains — a depth-1 sibling list under the constraint is the flat-funnel bug too
+// (observed live: converge emitted 5 parallel children, the empty-only trigger skipped the drill, and the CLR
+// multi-level check failed). When children already exist, the drill RESTRUCTURES them instead of inventing.
+const chainDepth = ns => (!ns || !ns.length) ? 0 : 1 + Math.max(...ns.map(n => chainDepth(n.children || [])))
+if (!TEST_PLAN && cRoot && chainDepth(cRoot.children || []) < 2) {   // test-plan stops at the map — the ranked tests ARE the deliverable
   const feed = (converged.stages||[]).flatMap(s => s.nodes||[]).filter(n => (cRoot.from||[]).includes(n.id))
+  const hasFlat = !!(cRoot.children && cRoot.children.length)
   const chain = await agent(
-    `The located system constraint is: "${cRoot.title}".\nSupporting evidence nodes: ${JSON.stringify(feed)}.\n` +
+    `The located system constraint is: "${cRoot.title}".\n` +
+    (hasFlat
+      ? `Its current children are a FLAT sibling list (no nesting): ${JSON.stringify(cRoot.children)}. RESTRUCTURE these into an explicit nested why-chain — PRESERVE the existing nodes verbatim (keep id/kind/grade/cite/validation/role exactly); add at most 1-2 new linking nodes, graded honestly, with kind/grade/gap values strictly from the schema enums. A parallel support may stay a sibling of the chain node it supports.\n`
+      : `Supporting evidence nodes: ${JSON.stringify(feed)}.\n`) +
     `Build the EXPLICIT causal chain UNDER it as a nested children[] tree: each node a declarative graded cause statement ` +
     `("X because Y"), recursing "why does THIS happen?" until you hit BEDROCK (a market fact / deliberate policy / law of ` +
     `the domain / something outside our control — where the next 'why' yields nothing new). 3-6 levels is typical. Grade ` +
     `every node (kind + grade + cite). Return {children:[...]} only.`,
     { label:'drill:constraint', phase:'Drill constraint', schema: NODE_TREE_SCHEMA, effort:'high' })
-  cRoot.children = chain.children || []
+  if (chain && chain.children && chain.children.length) cRoot.children = chain.children
 }
+
+// 6c) WIRING FIX (deterministic) — converge has been observed emitting stage TITLES in roots[].from instead
+// of node ids, which breaks the viz's edge-lighting and the constraint's "converges from" tally. Map titles
+// to that stage's node ids in plain code; leave real ids untouched.
+;(converged.roots || []).forEach(r => {
+  r.from = (r.from || []).flatMap(f => {
+    const st = (converged.stages || []).find(s => s.title === f)
+    return st ? (st.nodes || []).map(n => n.id).filter(Boolean) : [f]
+  })
+})
 
 // 7) VALIDATE constraint.loadBearing / ifFalse against real ids — converge has been observed to
 //    emit phantom ids (e.g. "r1-3a"), which silently breaks the viz stress-test. Re-point if invalid.
@@ -310,6 +379,16 @@ if (measurableWarning) converged._measurableWarning = measurableWarning  // in-h
 // stray number (e.g. "171") from context it read into provenance.depth/agents. DEPTH + the real count win.
 converged.provenance = { method:'Goldratt CRT', ...(converged.provenance||{}), depth: DEPTH /*, agents: <real count if tracked> */ }
 converged.apexType = APEX_TYPE
+
+// 7d) VERDICT STATUS — bind the headline's confidence to the census. Field lesson: the census honestly said
+//     "the constraint rests on HYPOTHESIS" while the HTML header looked act-ready, and the reader trusted the
+//     header. Computed HERE in plain code, never by an agent — it's arithmetic over the tree, not a judgment.
+let _lb = null
+;(function findLB(ns){ (ns||[]).forEach(n => { if (n && n.id === (converged.constraint||{}).loadBearing) _lb = n; if (n) findLB(n.children) }) })(
+  [...(converged.stages||[]).flatMap(s=>s.nodes||[]), ...(converged.roots||[]).flatMap(r=>r.children||[])])
+const _lbWeak = !_lb || ['HYPOTHESIS','CLAIM'].includes(_lb.kind) ||
+                (_lb.kind === 'MEASURED' && ['raw','contested'].includes(_lb.validation || 'raw'))   // unaudited = raw = map, deliberately
+converged.verdictStatus = (_lbWeak || refuteWarning || measurableWarning || TEST_PLAN) ? 'map' : 'verdict'
 
 // 7b) LEVER DECOMPOSITION + SIZING — TARGET APEX ONLY. A constraint tree finds the ONE bottleneck; a
 //     "hit N by date" goal ALSO needs the ADDITIVE paths to N, sized, so the output is a portfolio that
@@ -357,15 +436,17 @@ return converged
   - `dedupeByMeaning(branches)` — **must actually merge near-duplicates.** Use **token-set-ratio ≥ ~0.55** on normalized text (lowercase, strip punctuation/stopwords), keep the best-graded representative per group, union its `cite`s. **Do NOT use a sorted 6-word prefix key — it's too strict and merges nothing** (a live run went 33→33, and only the cap reduced it, which defeats the point of deduping before the cap).
   - `rankByLoadBearing(branches)` — sort so the cap keeps the important ones: MEASURED/Strong and nodes many lenses surfaced first; FRAMING / single-lens / Weak last. The `.slice(0, MAX_DEEPEN)` then drops the tail safely. **`log()` how many were dropped** — never silently truncate.
   - `isLoadBearing(branch)` — true if the branch is a plausible constraint candidate (not FRAMING, grade ≥ Mod, or flagged by ≥2 lenses). **CRITICAL: this reads the branch's TOP-LEVEL `kind`/`grade`/`lensCount` — the deepen agent MUST propagate those up to the returned branch node, not bury them only inside `children[]`. If it doesn't, `isLoadBearing` returns 0 for everything and the refute pass SILENTLY does nothing** (observed live). The refute-failure guard above turns that silence into a loud warning, but the real fix is propagating the metadata.
-  - `NODE_TREE_SCHEMA` = a single branch object that REQUIRES top-level `kind`/`grade` (+ optional `lensCount`, + optional `gap` on HYPOTHESIS/CLAIM nodes) and a recursive `children:[NODE]` (used by deepen + the constraint drill); `VERDICT_SCHEMA` = `{refuted:boolean, demote:boolean, evidence:string}`; `REGRADE_SCHEMA` = `{kind:enum(answer-kinds), grade:string, cite:string, gap?:enum('in-hand','external','experiment')}` (used by the measurable-in-hand guard's re-grade pass); `TREE_JSON_SCHEMA` = the strict schema above (its `roots[].children` is what makes the tree multi-level — do not drop it).
+  - `NODE_TREE_SCHEMA` = a single branch object that REQUIRES top-level `kind`/`grade` (+ optional `lensCount`, + optional `gap` on HYPOTHESIS/CLAIM nodes, + optional `validation` on MEASURED nodes) and a recursive `children:[NODE]` (used by deepen + the constraint drill); `VERDICT_SCHEMA` = `{refuted:boolean, demote:boolean, evidence:string}`; `REGRADE_SCHEMA` = `{kind:enum(answer-kinds), grade:string, cite:string, gap?:enum('in-hand','external','experiment')}` (used by the measurable-in-hand guard's re-grade pass); `AUDIT_SCHEMA` = `{validation:enum('validated','contested','raw'), triangulated:boolean, secondValue?:string, discrepancy?:string, evidence:string}` (`validation` + `evidence` required — used by the measurement audit); `TREE_JSON_SCHEMA` = the strict schema above (its `roots[].children` is what makes the tree multi-level — do not drop it).
   - `LEVERS_SCHEMA` (target apex only) = `{levers:[{id, name, path, sizing:{volume, conversion, contribution, basis}, ownWinBuy:enum('own','win','buy'), effort:enum('low','med','high'), bindsConstraint?:boolean, role:enum('primary','secondary','dropped'), droppedReason?}], sizing:{target, byDate, sumOfLevers, gapToTarget, bottomLine}}` — `levers` + `sizing.bottomLine` required; every `dropped` lever MUST carry a `droppedReason` (the no-silent-suppression rule).
   - `NARRATIVE_SCHEMA` = `{sections:[{heading, body}]}` (both required) — the top-of-HTML memo (3-7 short prose sections).
   - `esc0` = `s => (s||'').replace(/[`$]/g,' ')` — strips backticks/`$` so a warning string spliced into a template literal can't break it (used when passing `_refuteWarning`/`_measurableWarning` into the narrate prompt).
 - **The `gap` tag is the spine of the data-honesty model.** Every HYPOTHESIS/CLAIM node carries one: `in-hand` (one read over the Phase-1 sources settles it → the measurable-in-hand guard computes it and re-grades MEASURED; it must NEVER survive to the output), `external` (needs data we don't have), `experiment` (needs a test). `dataRequest[]` is built from the `external`/`experiment` gaps only — it's the "what I need from you to turn this map into a verdict" deliverable, the generalized ROI-pattern ("I lack the data, but here are the exact numbers that answer it"). Keep it distinct from `tests[]`: `tests[]` are fork-deciding experiments, `dataRequest[]` is the ranked missing-evidence ask (they may overlap; a `dataRequest` item may BE a cheapest-test). Interaction with the user happens only at the Phase-1 pre-flight gate and via this Data Request — never mid-run.
-- **Standard** = 6 lenses, 1-vote refute, one-level deepen + constraint drill. **Deep** = 9 lenses, 3-vote refute, loop-until-dry + constraint drill. (Quick was REMOVED — for a cheap gut-check, ask a single agent; this skill only earns its cost when one mind can confidently go wrong.)
+- **Standard** = 6 lenses, 1-vote refute, one-level deepen + measurement audit + constraint drill. **Deep** = 9 lenses, 3-vote refute, loop-until-dry + wider audit + constraint drill. **Test-plan** = 4 lenses, 1-vote refute, audit, NO drill — the deliverable is the branch-map + ranked cheapest-tests + Data Request as *markdown* (skip Phase 3's HTML machinery entirely); `verdictStatus` is forced to `map` because the decisive sources are human-only. (Quick was REMOVED — for a cheap gut-check, ask a single agent; this skill only earns its cost when one mind can confidently go wrong. Test-plan is not Quick: it's a different output *shape*, not a cheaper verdict.)
+- **The source registry rides inside `SOURCES`.** From Phase 1, include each source as `{id, tier: canonical|curated|raw, caveats}` in the SOURCES string, so lens/deepen agents can cite source ids and the audit agents know what counts as a second independent pipeline (and which source the business already trusts). The registry + cleanliness gate happen at the ORCHESTRATOR level before launch — zero agents; the audit pass only covers what the gate couldn't settle.
+- **Update re-entry (amend, don't re-derive).** When the user returns with test results, do NOT rerun this workflow. Load `why-tree-output.json`, re-grade the touched nodes in place (HYPOTHESIS→MEASURED with the new cite + `validation`; or `contested`; or role `REFUTED` with the killing evidence), recompute `census` + `verdictStatus` in plain code, and re-run ONLY the converge(+drill) step if the constraint's `loadBearing` node fell. 0-3 agents per loop. The anti-contamination rule (never read a prior verdict) applies to re-DERIVING a fresh tree, not to amending a live one.
 - **Apex type drives the output shape** (set `args.apexType` from Phase 0). `symptom` → the classic constraint tree (no lever stage). `target` ("hit N by date") → the same tree PLUS the lever-decomposition stage (`levers[]` + `sizing`): the additive paths to N, sized, so the verdict is "the bottleneck AND whether the levers sum to the number." The lever stage is **+2 agents** (decompose + the always-on narrate); it does not change the core agent count. The suppression rule (a lever may be `dropped` with a `droppedReason`, never silently cut) is the generalization of a real run that lost a whole growth lever when converge refuted everything down to one.
 - **`narrative[]` runs both modes** (+1 agent): a final memo the HTML renders at the top, so the single artifact explains itself before anyone opens the tree.
-- **Honest agent count** = lenses + deepen(≤`MAX_DEEPEN`) + refute(≤`MAX_REFUTE` × (`REFUTE_VOTES`+1)) + converge + drill. The **refute fan-out is the multiplier**: Standard ≈ **20-36**, Deep ≈ **30-55+**. The "~12-16 / ~25-30" figures in older docs predate the caps and the drill step — SKILL.md's gate now quotes the realistic ranges. The caps bound the worst case (no 171-blowup); they don't make it cheap.
+- **Honest agent count** = lenses + deepen(≤`MAX_DEEPEN`) + audit(≤`MAX_AUDIT`) + refute(≤`MAX_REFUTE` × (`REFUTE_VOTES`+1)) + converge + drill + narrate. The **refute fan-out is the multiplier**: Standard ≈ **22-40**, Deep ≈ **32-60+**, Test-plan ≈ **10-18**. (A real Standard field run: 26 agents ≈ 833k output tokens, ~32k/agent.) The "~12-16 / ~25-30" figures in older docs predate the caps, the drill and the audit steps — SKILL.md's gate now quotes the realistic ranges. The caps bound the worst case (no 171-blowup); they don't make it cheap.
 - For data-grounded problems, name the file paths / DB tables explicitly in `SOURCES` so the deepen/refute agents read them (this is what produced real refutations like "6/6 sampled accounts had a 2nd seat" in the source case).
 - Save `converged` to `why-tree-output.json` before rendering, so a render failure never loses the analysis.
 - If the user set a token budget, gate the deep loop on `budget.remaining()`.

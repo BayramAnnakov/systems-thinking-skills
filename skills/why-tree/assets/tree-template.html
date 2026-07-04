@@ -14,7 +14,14 @@
                (this kills the two-expand wart AND the width sprawl).
     - The constraint's CONFIDENCE is shown (solid vs dashed) so a hypothesised constraint never
       reads as a proven one. Refuted causes appear as ghost-stubs in the rail.
+    - verdictStatus ('verdict'|'map') styles the HEADER: a 'map' tree wears an amber working-hypothesis
+      banner naming the deciding test — the census honesty must reach the headline.
+    - MEASURED nodes carry a validation state (raw/validated/triangulated/contested) rendered as a tag —
+      an unaudited number must not wear the same solid green as a triangulated one.
   Data-driven: swap the JSON in <script id="tree-data">. Self-contained vanilla JS.
+  ⚠ UPDATE RULE: to refresh an already-delivered run, replace ONLY the tree-data block inside the STYLED
+    output file. Do NOT regenerate that file from this bare template after the frontend-design pass — the
+    rebuild silently drops the aesthetic layer (observed in the field: 58k → 51k bytes, design gone).
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,6 +53,20 @@
   .verdict{font-size:clamp(15px,1.7vw,19px);line-height:1.45;color:var(--target);font-weight:500;margin:16px 0 0;max-width:64ch}
   .provenance{font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:18px;display:flex;flex-wrap:wrap;gap:6px 20px}
   .provenance b{color:var(--ink);font-weight:600}
+
+  /* verdictStatus — the headline may not outrun the census */
+  .vbadge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:5px 12px;border-radius:7px;margin:14px 0 0}
+  .vbadge.v-verdict{color:#9ff0c2;background:rgba(70,208,138,.13);border:1px solid rgba(70,208,138,.4)}
+  .vbadge.v-map{color:#141414;background:var(--k-hyp);border:1px solid var(--k-hyp)}
+  .vmap-note{font-family:var(--mono);font-size:12px;color:var(--k-hyp);margin:8px 0 0;max-width:70ch}
+  .verdict.mapv{color:var(--k-hyp)}
+
+  /* MEASURED validation state — raw must not wear the same solid green as triangulated */
+  .vt{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:5px;white-space:nowrap}
+  .vt-raw{color:var(--k-hyp);border:1px dashed rgba(224,194,74,.55)}
+  .vt-validated{color:var(--k-meas);border:1px solid rgba(70,208,138,.4)}
+  .vt-triangulated{color:#141414;background:var(--k-meas)}
+  .vt-contested{color:#f6a6b2;background:rgba(110,34,51,.5);border:1px solid rgba(240,105,126,.5)}
 
   .banner{background:linear-gradient(180deg,rgba(240,105,126,.10),rgba(240,105,126,.04));border:1px solid rgba(240,105,126,.32);border-left:3px solid var(--k-claim);border-radius:12px;padding:16px 20px;margin:26px 0}
   .banner h3{margin:0 0 9px;font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:#f3909f}
@@ -225,11 +246,11 @@
   ],
   "stages": [
     { "id":"S0","title":"Stage 0 · Measure — is the shortfall even real?","nodes":[
-      { "id":"G","text":"KPI counts \"workspaces created\", not \"workspaces with a 2nd member\" — solo workspaces inflate the number","kind":"MEASURED","grade":"Strong","role":"ROOT","cite":"Product DB: 61% of \"workspaces\" have exactly 1 member (n=2,140, 30d)" }
+      { "id":"G","text":"KPI counts \"workspaces created\", not \"workspaces with a 2nd member\" — solo workspaces inflate the number","kind":"MEASURED","grade":"Strong","role":"ROOT","validation":"triangulated","cite":"src:product-db: 61% of \"workspaces\" have exactly 1 member (n=2,140, 30d) — matches the finance MAU dashboard within 2%" }
     ]},
     { "id":"S1","title":"Stage 1 · Arrive — do net-new teams find us?","nodes":[
       { "id":"A","text":"Discovery gap — the collaboration use-case is invisible in search","kind":"INFERENCE","grade":"Strong","role":"LEVER","cite":"3 competitors rank p1 for \"team workspace\"; we rank p4 for \"notes app\" only","children":[
-        { "id":"A1","text":"Landing copy sells single-player notes; the team value prop is below the fold","kind":"MEASURED","grade":"Mod","cite":"Heatmap: 2.1% scroll to the \"invite your team\" section" }
+        { "id":"A1","text":"Landing copy sells single-player notes; the team value prop is below the fold","kind":"MEASURED","grade":"Mod","validation":"raw","cite":"src:heatmap (pipeline unchecked — bots not filtered): 2.1% scroll to the \"invite your team\" section" }
       ]},
       { "id":"N","text":"Net-new arrival rate is UNVERIFIED — analytics can't separate new orgs from returning users","kind":"CLAIM","grade":"Weak","role":"CONSTRAINT?","gap":"external","cite":"No org-creation event in the warehouse. Test: instrument org_created + first_invite." }
     ]},
@@ -239,8 +260,8 @@
       { "id":"P","text":"\"Onboarding is too long\" — the drop is pre-onboarding, not inside the flow","kind":"MEASURED","grade":"Strong","role":"REFUTED","cite":"Median time-to-first-workspace = 6 min; abandonment is at activation intent" }
     ]},
     { "id":"X","title":"Cross-cutting (acts at every stage) — incl. THE constraint","crosscut":true,"nodes":[
-      { "id":"M","text":"No one owns \"net-new team activation\" — it's split across Growth and Product, measured by neither","kind":"MEASURED","grade":"Strong","role":"CONSTRAINT","cite":"0 OKR rows name team-activation; de-facto owner is whoever's on call" },
-      { "id":"Q","text":"Growth is comped on signups, not activated teams — the incentive points at the wrong number","kind":"MEASURED","grade":"Strong","role":"ROOT","cite":"Q3 comp plan: 100% of growth bonus tied to signup volume" }
+      { "id":"M","text":"No one owns \"net-new team activation\" — it's split across Growth and Product, measured by neither","kind":"MEASURED","grade":"Strong","role":"CONSTRAINT","validation":"validated","cite":"src:okr-doc: 0 OKR rows name team-activation; de-facto owner is whoever's on call" },
+      { "id":"Q","text":"Growth is comped on signups, not activated teams — the incentive points at the wrong number","kind":"MEASURED","grade":"Strong","role":"ROOT","validation":"validated","cite":"src:comp-plan (curated, finance-approved): 100% of growth bonus tied to signup volume" }
     ]}
   ],
   "roots": [
@@ -280,6 +301,7 @@
   "census": { "measured":0.5,"inference":0.25,"claim":0.13,"instance":0.12,"external":0,"hypothesis":0,
     "bottomLine":"Half measured — but the node that would locate the funnel constraint (N, arrival rate) is unverified. The POLICY constraint is settled; the mechanism constraint is a map, not a verdict. Run test #1 before building." },
   "apexType": "symptom",
+  "verdictStatus": "verdict",
   "narrative": [
     { "heading":"The problem", "body":"We set a goal of 1,000 net-new team workspaces by Q4 and we're well short — but the number itself is suspect first: 61% of \"workspaces\" have a single member, so the KPI is partly counting solo users, not teams." },
     { "heading":"What the evidence forces", "body":"The binding cause is not product polish or pricing — both were refuted in-slice (median time-to-first-workspace is 6 min; 0 of 31 churned trials ever opened the pricing page). It is policy: net-new team activation has no owner, and Growth is comped on raw signups, so the number we care about is nobody's job." },
@@ -344,16 +366,24 @@ function firstClause(s){return (s||'').split(/ - | — |\. /)[0].trim();}
    Prefer an explicit `problem`; else if apex is phrased as a question, use the verdict's first clause. */
 const problemStatement = D.problem || (/\?\s*$/.test(D.apex||'') ? (firstClause(D.verdict||'')||D.apex) : D.apex) || '';
 function kchip(k){return k?`<span class="chip ${(KIND[k]||{}).c||'k-frame'}">${esc(k)}</span>`:'';}
+/* validation tag — only meaningful on MEASURED nodes; absent field on a MEASURED node renders as raw-by-default is NOT assumed (legacy trees stay clean) */
+function vtag(n){return (n&&n.kind==='MEASURED'&&n.validation)?`<span class="vt vt-${esc(n.validation)}">${esc(n.validation)}</span>`:'';}
 function dot(k){return `<span class="kdot" style="background:${(KIND[k]||{}).col||'var(--faint)'}"></span>`;}
 function rdot(k){return `<span class="cdot" style="background:${(KIND[k]||{}).col||'var(--faint)'}"></span>`;}
 
 /* header / banner / legend */
 document.getElementById('apex').innerHTML=esc(problemStatement)+' <span class="frame">— the problem</span>';
 const vEl=document.getElementById('verdict'); if(D.verdict)vEl.textContent=D.verdict; else vEl.style.display='none';
+/* verdictStatus banner — a 'map' tree must say so IN THE HEADER, naming the deciding test (absent field = legacy tree, no banner) */
+const vStat=D.verdictStatus;
+if(vStat==='map'){vEl.classList.add('mapv');
+  vEl.insertAdjacentHTML('afterend',`<div class="vbadge v-map">⚠ working hypothesis — map, not verdict</div>`+
+    ((D.tests&&D.tests[0])?`<p class="vmap-note">Decided by: ${esc(D.tests[0].test)}</p>`:''));}
+else if(vStat==='verdict'){vEl.insertAdjacentHTML('afterend',`<div class="vbadge v-verdict">✓ verdict — the decisive nodes are validated</div>`);}
 const p=D.provenance||{};
 document.getElementById('provenance').innerHTML=[["Method",p.method],["Depth",p.depth],["Agents",p.agents],["Built",p.date]].filter(x=>x[1]!=null).map(x=>`${esc(x[0])} <b>${esc(x[1])}</b>`).join('<span></span>');
 if(D.corrections&&D.corrections.length)document.getElementById('banner').innerHTML=`<div class="banner"><h3>⚠ Read first — live corrections from the data</h3><ul>${D.corrections.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`;
-document.getElementById('legend').innerHTML='<span>EVIDENCE</span>'+Object.keys(KIND).map(k=>`<span class="chip ${KIND[k].c}">${k}</span>`).join('')+'<span class="sep"></span><span>ROLE</span>'+['ROOT','CONSTRAINT','LEVER','REFUTED'].map(r=>`<span class="role ${ROLE[r]}">${r}</span>`).join('')+'<span class="grade">· grade Strong/Mod/Weak · dashed = rests on soft evidence</span>';
+document.getElementById('legend').innerHTML='<span>EVIDENCE</span>'+Object.keys(KIND).map(k=>`<span class="chip ${KIND[k].c}">${k}</span>`).join('')+'<span class="sep"></span><span>ROLE</span>'+['ROOT','CONSTRAINT','LEVER','REFUTED'].map(r=>`<span class="role ${ROLE[r]}">${r}</span>`).join('')+'<span class="sep"></span><span>MEASURED PIPELINE</span>'+['raw','validated','triangulated','contested'].map(v=>`<span class="vt vt-${v}">${v}</span>`).join('')+'<span class="grade">· grade Strong/Mod/Weak · dashed = rests on soft evidence · raw = pipeline unchecked, caps at Mod</span>';
 
 /* indexes */
 const stages=D.stages||[], roots=D.roots||[], con=D.constraint||{};
@@ -392,7 +422,7 @@ function chainCards(nodes){ if(!nodes||!nodes.length)return '';
     return `<div class="cwhy">because</div>`+
       `<div class="knode clevel${bedrock?' bedrock':''}${lb?' lb':''}" data-sk="nd:${esc(n.id)}" tabindex="0">`+
         `<div class="kl">${esc(short(n.text,130))}</div>`+
-        `<div class="km">${dot(n.kind)}<span class="grade">${esc(n.kind||'')}${n.grade?' · '+esc(n.grade):''}</span>`+
+        `<div class="km">${dot(n.kind)}<span class="grade">${esc(n.kind||'')}${n.grade?' · '+esc(n.grade):''}</span>${vtag(n)}`+
         `${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}${bedrock&&!lb?'<span class="kcount">bedrock</span>':''}${lb?'<span class="lbtag">weakest link</span>':''}</div>`+
       `</div>`+chainCards(n.children);}).join(''); }
 const chainHtml=(conRoot.children&&conRoot.children.length)
@@ -430,7 +460,7 @@ function markSel(sk){spine.querySelectorAll('.knode').forEach(n=>n.classList.tog
 /* ===== RAIL (follow & validate) ===== */
 const rail=document.getElementById('rail');
 function crumb(items){return `<div class="crumb">${items.map((it,i)=>(i?'<span class="sepc">›</span>':'')+(it.go?`<a data-go='${esc(JSON.stringify(it.go))}'>${esc(it.label)}</a>`:`<span>${esc(it.label)}</span>`)).join('')}</div>`;}
-function childRow(n){const g=n.role==='REFUTED'?'ghost':'';const st=(stages.find(s=>s.id===nodeStage[n.id])||{}).title;return `<div class="child ${g}" data-node="${esc(n.id)}">${rdot(n.kind)}<div class="ctext">${esc(short(n.text,120))} ${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}${st?` <span class="grade">· ${esc(short(st,18))}</span>`:''}</div></div>`;}
+function childRow(n){const g=n.role==='REFUTED'?'ghost':'';const st=(stages.find(s=>s.id===nodeStage[n.id])||{}).title;return `<div class="child ${g}" data-node="${esc(n.id)}">${rdot(n.kind)}<div class="ctext">${esc(short(n.text,120))} ${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}${vtag(n)}${st?` <span class="grade">· ${esc(short(st,18))}</span>`:''}</div></div>`;}
 
 function inspectApex(){clearLight();markSel('APEX');spine.classList.add('focusing');spine.querySelectorAll('.knode').forEach(n=>n.classList.add('on'));svg.querySelectorAll('path').forEach(p=>p.classList.add('on'));
   rail.innerHTML=crumb([{label:'The problem'}])+`<div class="rtype">Problem · undesirable effect</div><div class="rtitle">${esc(problemStatement)}</div>`+(D.verdict?`<div class="rstmt">${esc(D.verdict)}</div>`:'')+`<h5>Because — root causes</h5>`+roots.map(r=>`<div class="child" data-root="${esc(r.id)}">${rdot(weakestKind(r.from))}<div class="ctext">${esc(r.title)} ${r.isConstraint?'<span class="role role-con">CONSTRAINT</span>':''}</div></div>`).join('');}
@@ -443,7 +473,7 @@ function inspectNode(nid){const n=nodeById[nid];if(!n)return;const rid=(rootsByN
   rail.innerHTML=crumb([{label:'Problem',go:{t:'apex'}}].concat(r?[{label:short(r.title,20),go:{t:'root',id:rid}}]:[]).concat([{label:short(n.text,22)}]))
     +`<div class="rtype">${n.role==='REFUTED'?'Refuted cause (kept as evidence)':'Cause'}${st?` · ${esc(short(st,22))}`:''}</div>`
     +`<div class="rtitle">${esc(n.text)}</div>`
-    +`<div class="rchips">${kchip(n.kind)}${n.grade?`<span class="grade">${esc(n.grade)}</span>`:''}${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}</div>`
+    +`<div class="rchips">${kchip(n.kind)}${vtag(n)}${n.grade?`<span class="grade">${esc(n.grade)}</span>`:''}${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}</div>`
     +(n.cite?`<div class="rcite"><span class="cl">evidence</span>${esc(n.cite)}</div>`:'')
     +`<div class="rlineage">${lineage(nid)}</div>`
     +(kids.length?`<h5>Because of (sub-causes)</h5>`+kids.map(childRow).join(''):'');}

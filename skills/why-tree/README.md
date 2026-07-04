@@ -1,6 +1,6 @@
 # Why Tree
 
-A heavyweight, **agentic** Goldratt Current-Reality Tree. Point it at a hard, contested problem and it fans **20-55 AI agents** across the problem's branch-space, **grades every node by the kind of evidence behind it** (MEASURED / INFERENCE / CLAIM / HYPOTHESIS …), **tries to refute its own load-bearing branches**, and **converges on the ONE system constraint** — plus the negative branches (fixes that backfire) and the single cheapest test that would fork-decide. Output: a self-contained **interactive HTML tree** + a one-page **decision doc**.
+A heavyweight, **agentic** Goldratt Current-Reality Tree. Point it at a hard, contested problem and it fans **10-60 AI agents** across the problem's branch-space, **grades every node by the kind of evidence behind it** (MEASURED / INFERENCE / CLAIM / HYPOTHESIS …), **tries to refute its own load-bearing branches**, and **converges on the ONE system constraint** — plus the negative branches (fixes that backfire) and the single cheapest test that would fork-decide. Output: a self-contained **interactive HTML tree** + a one-page **decision doc**.
 
 This is the **"build the evidence and find the wall"** move. Its siblings: `/constraint-finder` is the lightweight coach that returns Goldratt's **5 Focusing Steps** once you already know the constraint; `/triz-dissolve` is the **"move the wall"** move. The natural chain is **why-tree → constraint-finder**: this skill *locates and evidences* the constraint on a messy problem; constraint-finder tells you what to *do* about it.
 
@@ -37,13 +37,15 @@ Open `PROMPT.md`, copy the block between `===PROMPT START===` and `===PROMPT END
 
 ## Token honesty (read before launching)
 
-Multi-agent and token-heavy by design. **Standard ≈ 20-36 agents (~1-1.8M tokens); Deep ≈ 30-55 agents (~1.5-2.7M).** The skill states this and asks for a depth before it launches. **When NOT to use it:** a clear-cut problem a single careful pass would nail — just ask one agent. The machinery only earns its cost when **one mind could confidently pick the wrong cause** (cohort/measurement traps, several plausible roots, a mechanism hidden under a symptom, more branches than one context holds).
+Multi-agent and token-heavy by design. **Standard ≈ 22-40 agents (~0.8-2.0M tokens); Deep ≈ 32-60 agents (~1.2-3.0M); Test-plan ≈ 10-18** (a real Standard field run: 26 agents ≈ 833k). The skill states this and asks for a depth before it launches. **When NOT to use it:** a clear-cut problem a single careful pass would nail — just ask one agent. The machinery only earns its cost when **one mind could confidently pick the wrong cause** (cohort/measurement traps, several plausible roots, a mechanism hidden under a symptom, more branches than one context holds). **Test-plan mode** is for when the decisive sources are human-only (internal BI, an ERP, ad consoles): it stops at a branch-map + ranked cheapest-tests + Data Request, and you iterate via the update loop as your test results come back.
 
 ## Design constraints (do not modify)
 
 - **Depth + token-cost gate.** Never launch the expensive tier without stating the cost and getting a depth choice. The gate is the skill's conscience.
 - **Branch-space first, depth second.** Map *all* the candidate "why"s from many independent lenses before deepening any one.
 - **Grade every node.** Answer-kind + confidence + citation on every node. Ungraded assertions are banned. A HYPOTHESIS must name the test that would settle it.
+- **A number is not a fact.** Every MEASURED node carries a validation state (`raw`/`validated`/`triangulated`/`contested`): `raw` caps at Mod and can never support the constraint; two sources disagreeing in sign is a CONTESTED node with both values shown, never a "fact". The measurement audit attacks the pipeline (bots in the denominator, definition mismatches, seasonal Δs) — the refute pass alone won't, because a strong-looking number doesn't look thin.
+- **The headline may not outrun the census.** `verdictStatus:'map'` renders an amber working-hypothesis banner in the header itself, naming the deciding test.
 - **Refute before trust.** Load-bearing branches face an independent adversarial pass; killed branches stay visible *with the evidence that killed them*. (A degraded/skipped refute pass is the most dangerous failure — the engine warns loudly if it runs on zero branches.)
 - **Converge to ONE.** 3-5 roots, one located system constraint — often a **policy/ownership** problem wearing a tooling costume.
 - **The apex is a STATEMENT, not a question**, and never a smuggled solution ("why don't we have feature Y" biases the whole tree).
@@ -58,3 +60,5 @@ Multi-agent and token-heavy by design. **Standard ≈ 20-36 agents (~1-1.8M toke
 - Deleting refuted branches instead of keeping them with their killing evidence.
 - Running the full multi-agent workflow on a clear-cut problem a single agent would nail.
 - Smuggling the answer into the apex (a problem framed as a missing solution).
+- A MEASURED chip on an unaudited pipeline — bots in the denominator, a metric-definition mismatch, or a seasonal Δ shipped as a "fact" (a field run burned 4 of 6 iterations debunking exactly these).
+- An act-ready verdict header on a tree whose constraint rests on an untested node.
