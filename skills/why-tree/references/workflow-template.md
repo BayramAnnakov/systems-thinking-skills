@@ -490,6 +490,15 @@ const _tally = {}; let _tot = 0
 converged.census = { bottomLine: (converged.census||{}).bottomLine || '',
   ...Object.fromEntries(['measured','instance','external','claim','inference','hypothesis'].map(k => [k, _tot ? Math.round(100*(_tally[k]||0)/_tot) : 0])) }
 
+// 7d³) GRADE-CAP SWEEP over the FINAL tree — converge preserves `validation` but has been observed
+//      shipping a contested node at Mod (field run 2026-07-04): the audit-time caps (raw→Mod,
+//      contested→Weak) must be re-enforced deterministically after converge rebuilds the tree.
+;(function capFinal(ns){ (ns||[]).forEach(n => { if (n && n.kind === 'MEASURED') {
+  if ((n.validation||'raw') === 'raw' && n.grade === 'Strong') n.grade = 'Mod'
+  if (n.validation === 'contested') n.grade = 'Weak' }
+  if (n) capFinal(n.children) }) })(
+  [...(converged.stages||[]).flatMap(s=>s.nodes||[]), ...(converged.roots||[]).flatMap(r=>r.children||[])])
+
 // 7b) LEVER DECOMPOSITION + SIZING — TARGET APEX ONLY. A constraint tree finds the ONE bottleneck; a
 //     "hit N by date" goal ALSO needs the ADDITIVE paths to N, sized, so the output is a portfolio that
 //     sums to the number — not a lone bottleneck. The L2-suppression fix lives here: levers are PARALLEL
