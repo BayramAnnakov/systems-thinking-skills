@@ -29,7 +29,7 @@
 <style>
   :root{
     --bg:#14161b; --panel:#1b1e25; --panel-2:#232730; --raise:#2a2f3a;
-    --ink:#e7e9ec; --muted:#8b93a0; --faint:#5b626e; --line:#2e333d;
+    --ink:#e7e9ec; --muted:#8b93a0; --faint:#7b8494; --line:#2e333d;
     --target:#f5a524; --target-soft:rgba(245,165,36,.16);
     --k-meas:#46d08a; --k-inst:#e08a4a; --k-ext:#5ba8f5; --k-claim:#f0697e;
     --k-inf:#b98af0; --k-hyp:#e0c24a; --k-frame:#8b93a0;
@@ -37,7 +37,7 @@
     --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
   *{box-sizing:border-box}
-  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--display);font-size:15px;line-height:1.55;
     padding:0 0 96px;-webkit-font-smoothing:antialiased;
     background-image:radial-gradient(1100px 480px at 78% -8%,rgba(245,165,36,.07),transparent 60%);}
@@ -59,10 +59,12 @@
   .vbadge.v-verdict{color:#9ff0c2;background:rgba(70,208,138,.13);border:1px solid rgba(70,208,138,.4)}
   .vbadge.v-map{color:#141414;background:var(--k-hyp);border:1px solid var(--k-hyp)}
   .vmap-note{font-family:var(--mono);font-size:12px;color:var(--k-hyp);margin:8px 0 0;max-width:70ch}
+  header.hdr-map .wrap{border-left:3px dashed rgba(224,194,74,.55);padding-left:21px}
+  .vhyp{color:var(--k-hyp);font-weight:700;letter-spacing:.05em}
   .verdict.mapv{color:var(--k-hyp)}
 
   /* MEASURED validation state — raw must not wear the same solid green as triangulated */
-  .vt{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:5px;white-space:nowrap}
+  .vt{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:0 6px;border-radius:4px;margin-left:5px;white-space:nowrap}
   .vt-raw{color:var(--k-hyp);border:1px dashed rgba(224,194,74,.55)}
   .vt-validated{color:var(--k-meas);border:1px solid rgba(70,208,138,.4)}
   .vt-triangulated{color:#141414;background:var(--k-meas)}
@@ -90,6 +92,8 @@
   .role-ref{color:var(--faint);background:transparent;border:1px solid var(--line)}
   .role-down{color:var(--k-hyp);background:transparent;border:1px solid rgba(224,194,74,.5)}
   .role-new{color:#bcdcff;background:rgba(91,168,245,.16);border:1px solid rgba(91,168,245,.34)}
+  .role-any{color:var(--muted);background:transparent;border:1px solid var(--line)}
+  .role-conq{color:var(--target);background:transparent;border:1px dashed rgba(245,165,36,.6)}
 
   h2.sec{font-size:13px;font-family:var(--mono);font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:50px 0 4px;display:flex;align-items:center;gap:12px}
   h2.sec .n{color:var(--target);font-size:12px}
@@ -135,6 +139,7 @@
   .knode.clevel.bedrock{border-left-color:var(--target);background:linear-gradient(160deg,rgba(245,165,36,.13),transparent)}
   /* #9 weakest-link flag + #10 stress-test (poke the load-bearing node, watch the verdict move) */
   .knode.lb{border-left-color:var(--k-hyp);border-left-style:dashed}
+  .knode.lbsolid{border-left-color:var(--target)}
   .lbtag{display:inline-block;font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:.04em;color:var(--k-hyp);border:1px dashed rgba(224,194,74,.55);border-radius:5px;padding:0 6px;margin-left:auto;text-transform:uppercase}
   .knode.lb.struck{opacity:.4;border-left-color:var(--k-claim)} .knode.lb.struck .kl{text-decoration:line-through;text-decoration-color:var(--k-claim)}
   .knode.constraint.mapped{border-style:dashed;filter:saturate(.7)}
@@ -265,7 +270,7 @@
     ]}
   ],
   "roots": [
-    { "id":"R0","title":"No owner + misaligned incentive (POLICY, not product)","from":["M","Q"],"action":"Name a DRI for team-activation; re-comp Growth on activated teams","isConstraint":true,
+    { "id":"R0","title":"No owner + misaligned incentive (POLICY, not product)","from":["M","Q"],"action":"Name a DRI for team-activation; re-comp Growth on activated teams","restsOn":["M","Q","R0a"],"isConstraint":true,
       "children":[
         { "id":"R0a","text":"Team-activation falls between Growth and Product, so neither team is accountable for it","kind":"INFERENCE","grade":"Mod","cite":"0 OKR rows name team-activation (Q3 planning doc)","children":[
           { "id":"R0b","text":"Each org is measured only on its own KPI, so the cross-org handoff is nobody's number","kind":"MEASURED","grade":"Strong","cite":"Growth OKR=signups; Product OKR=ship-rate; neither = activated teams","children":[
@@ -284,7 +289,7 @@
   "negatives": [
     "Auto-invite a user's contacts to boost the metric → spam complaints + a hard deliverability cliff",
     "Optimize raw signups harder → inflates the vanity number the real constraint already games",
-    "Rebuild the onboarding flow → the drop is pre-onboarding (correction #1); effort lands where the leak isn't"
+    { "text": "Rebuild the onboarding flow → the drop is pre-onboarding (correction #1); effort lands where the leak isn't", "restsOn": ["P"] }
   ],
   "tests": [
     { "test":"Instrument org_created + first_invite + 2nd-member-joined events","decides":"Splits arrival-starvation from activation-leak — adjudicates N, G, W at once","rank":"#1" },
@@ -357,19 +362,19 @@
 
 <script>
 const KIND={MEASURED:{c:"k-meas",col:"var(--k-meas)",soft:0},INSTANCE:{c:"k-inst",col:"var(--k-inst)",soft:2},EXTERNAL:{c:"k-ext",col:"var(--k-ext)",soft:3},INFERENCE:{c:"k-inf",col:"var(--k-inf)",soft:4},CLAIM:{c:"k-claim",col:"var(--k-claim)",soft:5},HYPOTHESIS:{c:"k-hyp",col:"var(--k-hyp)",soft:6},FRAMING:{c:"k-frame",col:"var(--k-frame)",soft:1}};
-const ROLE={ROOT:"role-root",CONSTRAINT:"role-con","CONSTRAINT?":"role-con",LEVER:"role-lever",NEGATIVE:"role-neg",REFUTED:"role-ref",DOWNGRADED:"role-down","critic-added":"role-new"};
-const esc=s=>(s==null?"":String(s)).replace(/[&<>]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[m]));
+const ROLE={ROOT:"role-root",CONSTRAINT:"role-con","CONSTRAINT?":"role-conq",LEVER:"role-lever",NEGATIVE:"role-neg",REFUTED:"role-ref",DOWNGRADED:"role-down","critic-added":"role-new"};
+const esc=s=>(s==null?"":String(s)).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
 const D=JSON.parse(document.getElementById('tree-data').textContent);
-function short(s,n){s=(s||'').replace(/^\s*Stage\s*\d+\s*[·:.\-]\s*/i,'').trim();let c=s.split(/—|–| - |[;:(]/)[0].trim()||s;if(c.length>n)c=c.slice(0,n-1).trim()+'…';return c;}
+function short(s,n){s=(s||'').replace(/^\s*Stage\s*\d+\s*[·:.\-]\s*/i,'').trim();let c=s.split(/—|–| - |[;:(]/)[0].trim();if(c.length<30)c=s;if(c.length>n)c=c.slice(0,n-1).trim()+'…';return c;}
 function firstClause(s){return (s||'').split(/ - | — |\. /)[0].trim();}
 /* The funnel top must be the undesirable effect as a STATEMENT, not a question.
    Prefer an explicit `problem`; else if apex is phrased as a question, use the verdict's first clause. */
-const problemStatement = D.problem || (/\?\s*$/.test(D.apex||'') ? (firstClause(D.verdict||'')||D.apex) : D.apex) || '';
-function kchip(k){return k?`<span class="chip ${(KIND[k]||{}).c||'k-frame'}">${esc(k)}</span>`:'';}
+const problemStatement = D.problem || (/\?\s*$/.test(D.apex||'') ? ((firstClause(D.verdict||'')||D.apex).replace(/^\s*(Because|Потому что)\s+/i,'')) : D.apex) || '';
+function kchip(k,v){if(!k)return '';const extra=(k==='MEASURED'&&v==='raw')?' style="background:transparent;border:1px dashed rgba(70,208,138,.55)"':(k==='MEASURED'&&v==='contested')?' style="color:var(--k-claim);background:rgba(240,105,126,.12);border:1px solid rgba(240,105,126,.5)"':'';return `<span class="chip ${(KIND[k]||{}).c||'k-frame'}"${extra}>${esc(k)}</span>`;}
 /* validation tag — only meaningful on MEASURED nodes; absent field on a MEASURED node renders as raw-by-default is NOT assumed (legacy trees stay clean) */
 function vtag(n){return (n&&n.kind==='MEASURED'&&n.validation)?`<span class="vt vt-${esc(n.validation)}">${esc(n.validation)}</span>`:'';}
-function dot(k){return `<span class="kdot" style="background:${(KIND[k]||{}).col||'var(--faint)'}"></span>`;}
-function rdot(k){return `<span class="cdot" style="background:${(KIND[k]||{}).col||'var(--faint)'}"></span>`;}
+function dot(k,v){const col=(KIND[k]||{}).col||'var(--faint)';return (k==='MEASURED'&&v==='raw')?`<span class="kdot" style="background:transparent;border:1px solid ${col}"></span>`:`<span class="kdot" style="background:${col}"></span>`;}
+function rdot(k,v){const col=(KIND[k]||{}).col||'var(--faint)';return (k==='MEASURED'&&v==='raw')?`<span class="cdot" style="background:transparent;border:1px solid ${col}"></span>`:`<span class="cdot" style="background:${col}"></span>`;}
 
 /* header / banner / legend */
 document.getElementById('apex').innerHTML=esc(problemStatement)+' <span class="frame">— the problem</span>';
@@ -377,17 +382,21 @@ const vEl=document.getElementById('verdict'); if(D.verdict)vEl.textContent=D.ver
 /* verdictStatus banner — a 'map' tree must say so IN THE HEADER, naming the deciding test (absent field = legacy tree, no banner) */
 const vStat=D.verdictStatus;
 if(vStat==='map'){vEl.classList.add('mapv');
+  vEl.insertAdjacentHTML('afterbegin','<span class="vhyp">WORKING HYPOTHESIS: </span>');
+  const hd=document.querySelector('header'); if(hd)hd.classList.add('hdr-map');
   vEl.insertAdjacentHTML('afterend',`<div class="vbadge v-map">⚠ working hypothesis — map, not verdict</div>`+
     ((D.tests&&D.tests[0])?`<p class="vmap-note">Decided by: ${esc(D.tests[0].test)}</p>`:''));}
-else if(vStat==='verdict'){vEl.insertAdjacentHTML('afterend',`<div class="vbadge v-verdict">✓ verdict — the decisive nodes are validated</div>`);}
+/* the 'verdict' badge is inserted AFTER loadBearing/lbFragile are computed (below) so its copy can be honest about the weakest link */
 const p=D.provenance||{};
-document.getElementById('provenance').innerHTML=[["Method",p.method],["Depth",p.depth],["Agents",p.agents],["Built",p.date]].filter(x=>x[1]!=null).map(x=>`${esc(x[0])} <b>${esc(x[1])}</b>`).join('<span></span>');
+document.getElementById('provenance').innerHTML=[["Method",p.method],["Depth",p.depth],["Agents",p.agents],["Built",p.date],["Triage",p.triage&&p.triage.decision||null]].filter(x=>x[1]!=null&&x[1]!==false).map(x=>`${esc(x[0])} <b>${esc(x[1])}</b>`).join('<span></span>')+((p.triage&&p.triage.receipt)?`<span style="color:var(--faint)">${esc(p.triage.receipt)}</span>`:'');
 if(D.corrections&&D.corrections.length)document.getElementById('banner').innerHTML=`<div class="banner"><h3>⚠ Read first — live corrections from the data</h3><ul>${D.corrections.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`;
-document.getElementById('legend').innerHTML='<span>EVIDENCE</span>'+Object.keys(KIND).map(k=>`<span class="chip ${KIND[k].c}">${k}</span>`).join('')+'<span class="sep"></span><span>ROLE</span>'+['ROOT','CONSTRAINT','LEVER','REFUTED'].map(r=>`<span class="role ${ROLE[r]}">${r}</span>`).join('')+'<span class="sep"></span><span>MEASURED PIPELINE</span>'+['raw','validated','triangulated','contested'].map(v=>`<span class="vt vt-${v}">${v}</span>`).join('')+'<span class="grade">· grade Strong/Mod/Weak · dashed = rests on soft evidence · raw = pipeline unchecked, caps at Mod</span>';
+const lgG=(label,inner)=>`<span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap"><span>${label}</span>${inner}</span>`;
+document.getElementById('legend').innerHTML=lgG('EVIDENCE',Object.keys(KIND).map(k=>`<span class="chip ${KIND[k].c}">${k}</span>`).join(''))+'<span class="sep"></span>'+lgG('ROLE',['ROOT','CONSTRAINT','LEVER','REFUTED'].map(r=>`<span class="role ${ROLE[r]}">${r}</span>`).join(''))+'<span class="sep"></span>'+lgG('MEASURED PIPELINE',['raw','validated','triangulated','contested'].map(v=>`<span class="vt vt-${v}">${v}</span>`).join(''))+'<span class="grade">· grade Strong/Mod/Weak · dashed = rests on soft evidence · raw = pipeline unchecked, caps at Mod</span>';
 
-/* indexes */
+/* indexes — declarations hoisted so panels below survive a tree-build failure (agent JSON can be malformed) */
 const stages=D.stages||[], roots=D.roots||[], con=D.constraint||{};
 const nodeById={}, nodeStage={}, topNodesOfStage={}; let _cid=0;
+try{ /* TREE BUILD — a throw here must not kill the narrative/panels/census below */
 function indexNode(n,stageId){ if(!n.id)n.id='c'+(++_cid); nodeById[n.id]=n; if(stageId)nodeStage[n.id]=stageId; (n.children||[]).forEach(c=>indexNode(c,stageId)); }
 stages.forEach(s=>{ topNodesOfStage[s.id]=(s.nodes||[]).map(n=>n.id); (s.nodes||[]).forEach(n=>indexNode(n,s.id)); });
 roots.forEach(r=>(r.children||[]).forEach(c=>indexNode(c,null)));   /* index the constraint-branch chain too */
@@ -401,8 +410,9 @@ const lbPool=(conRoot.from||[]).map(id=>nodeById[id]).filter(Boolean).concat(con
 const loadBearing=(con.loadBearing&&nodeById[con.loadBearing]) ||
   lbPool.slice().sort((a,b)=> softRank(b)-softRank(a) || ((gradeOrd[a.grade]??1)-(gradeOrd[b.grade]??1)))[0] || null;
 const lbFragile=!!loadBearing && (softRank(loadBearing)>=4 || loadBearing.grade!=='Strong');
+if(vStat==='verdict'){vEl.insertAdjacentHTML('afterend',`<div class="vbadge v-verdict">✓ verdict — ${(lbFragile&&loadBearing)?`decisive chain validated · weakest link ${esc(loadBearing.kind)}/${esc(loadBearing.grade)} — see the stress-test`:'the decisive nodes are validated'}</div>`);}
 let stressed=false;
-function applyStress(){const cc=spine.querySelector('.knode.constraint');if(cc)cc.classList.toggle('mapped',stressed);
+function applyStress(){const cc=spine.querySelector('.knode.constraint');if(cc)cc.classList.toggle('mapped',stressed||vStat==='map');
   if(loadBearing){const ln=spine.querySelector(`.knode[data-sk="nd:${CSS.escape(loadBearing.id)}"]`);if(ln)ln.classList.toggle('struck',stressed);}}
 const rootsByNode={}; roots.forEach(r=>(r.from||[]).forEach(nid=>{(rootsByNode[nid]=rootsByNode[nid]||[]).push(r.id);}));
 function weakestKind(ids){let w=null,ws=-1; (ids||[]).forEach(id=>{const k=(nodeById[id]||{}).kind; const s=(KIND[k]||{}).soft||0; if(s>ws){ws=s;w=k;}}); return w;}
@@ -415,15 +425,15 @@ const apexCard=card('apex','APEX',`<div class="kl">${esc(problemStatement)}</div
 const rootBand=otherRoots.map(r=>{const wk=weakestKind(r.from);
   return card('root','rt:'+r.id,`<div class="kl">${esc(r.shortLabel||short(r.title,70))}</div><div class="km">${dot(wk)}<span class="kcount">${(r.from||[]).length} cause${(r.from||[]).length!==1?'s':''}</span></div>`, isWeak(wk)?'weak':'');}).join('');
 const conWk=weakestKind(conRoot.from);
-const conCard=card('constraint','rt:'+conRoot.id,`<div class="lock">System constraint · ${esc(con.type||'located')}</div><div class="kl">${esc(conRoot.title||'The constraint')}</div><div class="conf">${conSupport()}</div>`, isWeak(conWk)?'weak':'');
+const conCard=card('constraint','rt:'+conRoot.id,`<div class="lock">System constraint · ${esc(con.type||'located')}</div><div class="kl">${esc(conRoot.title||'The constraint')}</div><div class="conf">${conSupport()}</div>`, (isWeak(conWk)?'weak ':'')+(vStat==='map'?'mapped':''));
 /* the constraint-branch chain to bedrock — rendered as visible levels IN the spine (fixes the "1-level-deep" look) */
 function chainCards(nodes){ if(!nodes||!nodes.length)return '';
   return nodes.map(n=>{const bedrock=!(n.children&&n.children.length);const lb=!!loadBearing&&n.id===loadBearing.id;
     return `<div class="cwhy">because</div>`+
-      `<div class="knode clevel${bedrock?' bedrock':''}${lb?' lb':''}" data-sk="nd:${esc(n.id)}" tabindex="0">`+
+      `<div class="knode clevel${bedrock?' bedrock':''}${lb?(lbFragile?' lb':' lbsolid'):''}" data-sk="nd:${esc(n.id)}" tabindex="0">`+
         `<div class="kl">${esc(short(n.text,130))}</div>`+
-        `<div class="km">${dot(n.kind)}<span class="grade">${esc(n.kind||'')}${n.grade?' · '+esc(n.grade):''}</span>${vtag(n)}`+
-        `${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}${bedrock&&!lb?'<span class="kcount">bedrock</span>':''}${lb?'<span class="lbtag">weakest link</span>':''}</div>`+
+        `<div class="km">${dot(n.kind,n.validation)}<span class="grade">${esc(n.kind||'')}${n.grade?' · '+esc(n.grade):''}</span>${vtag(n)}`+
+        `${n.role?`<span class="role ${ROLE[n.role]||'role-any'}">${esc(n.role)}</span>`:''}${bedrock&&!lb?'<span class="kcount">bedrock</span>':''}${lb?(lbFragile?'<span class="lbtag">weakest link</span>':'<span class="lbtag" style="color:var(--muted);border:1px solid var(--line)">load-bearing</span>'):''}</div>`+
       `</div>`+chainCards(n.children);}).join(''); }
 const chainHtml=(conRoot.children&&conRoot.children.length)
   ? `<div class="chain-label">↓ why it exists — the chain to bedrock</div><div class="chain">${chainCards(conRoot.children)}</div>` : '';
@@ -443,7 +453,7 @@ otherRoots.forEach(r=>E.push({f:'rt:'+r.id,t:'rt:'+conRoot.id}));
 const svg=document.getElementById('edges');
 function rc(sk){const el=spine.querySelector(`.knode[data-sk="${CSS.escape(sk)}"]`);if(!el)return null;const b=spine.getBoundingClientRect(),r=el.getBoundingClientRect();return {cx:(r.left+r.right)/2-b.left,top:r.top-b.top,bot:r.bottom-b.top};}
 function drawEdges(){let p='';E.forEach((e,i)=>{const a=rc(e.f),c=rc(e.t);if(!a||!c)return;const x1=a.cx,y1=a.bot,x2=c.cx,y2=c.top,my=(y1+y2)/2;p+=`<path data-i="${i}" d="M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}"/>`;});svg.innerHTML=p;}
-drawEdges();window.addEventListener('resize',drawEdges);setTimeout(drawEdges,400);
+drawEdges();window.addEventListener('resize',drawEdges);setTimeout(drawEdges,400);if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawEdges);
 
 /* light the path for a set of spine sk-ids (down to constraint) */
 function lightSpine(seedSks){
@@ -459,8 +469,8 @@ function markSel(sk){spine.querySelectorAll('.knode').forEach(n=>n.classList.tog
 
 /* ===== RAIL (follow & validate) ===== */
 const rail=document.getElementById('rail');
-function crumb(items){return `<div class="crumb">${items.map((it,i)=>(i?'<span class="sepc">›</span>':'')+(it.go?`<a data-go='${esc(JSON.stringify(it.go))}'>${esc(it.label)}</a>`:`<span>${esc(it.label)}</span>`)).join('')}</div>`;}
-function childRow(n){const g=n.role==='REFUTED'?'ghost':'';const st=(stages.find(s=>s.id===nodeStage[n.id])||{}).title;return `<div class="child ${g}" data-node="${esc(n.id)}">${rdot(n.kind)}<div class="ctext">${esc(short(n.text,120))} ${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}${vtag(n)}${st?` <span class="grade">· ${esc(short(st,18))}</span>`:''}</div></div>`;}
+function crumb(items){return `<div class="crumb">${items.map((it,i)=>(i?'<span class="sepc">›</span>':'')+(it.go?`<a href="#" data-go='${esc(JSON.stringify(it.go))}'>${esc(it.label)}</a>`:`<span>${esc(it.label)}</span>`)).join('')}</div>`;}
+function childRow(n){const g=n.role==='REFUTED'?'ghost':'';const st=(stages.find(s=>s.id===nodeStage[n.id])||{}).title;return `<div class="child ${g}" data-node="${esc(n.id)}" tabindex="0" role="button">${rdot(n.kind,n.validation)}<div class="ctext">${esc(short(n.text,120))} ${n.role?`<span class="role ${ROLE[n.role]||'role-any'}">${esc(n.role)}</span>`:''}${vtag(n)}${st?` <span class="grade">· ${esc(short(st,18))}</span>`:''}</div></div>`;}
 
 function inspectApex(){clearLight();markSel('APEX');spine.classList.add('focusing');spine.querySelectorAll('.knode').forEach(n=>n.classList.add('on'));svg.querySelectorAll('path').forEach(p=>p.classList.add('on'));
   rail.innerHTML=crumb([{label:'The problem'}])+`<div class="rtype">Problem · undesirable effect</div><div class="rtitle">${esc(problemStatement)}</div>`+(D.verdict?`<div class="rstmt">${esc(D.verdict)}</div>`:'')+`<h5>Because — root causes</h5>`+roots.map(r=>`<div class="child" data-root="${esc(r.id)}">${rdot(weakestKind(r.from))}<div class="ctext">${esc(r.title)} ${r.isConstraint?'<span class="role role-con">CONSTRAINT</span>':''}</div></div>`).join('');}
@@ -468,12 +478,14 @@ function inspectApex(){clearLight();markSel('APEX');spine.classList.add('focusin
 function lineage(nid){const rs=(rootsByNode[nid]||[]).map(rid=>(roots.find(r=>r.id===rid)||{}).title).filter(Boolean);
   return `feeds <b>${rs.map(esc).join('</b>, <b>')||'—'}</b> → <b>${esc(conRoot.title)}</b>`;}
 function inspectNode(nid){const n=nodeById[nid];if(!n)return;const rid=(rootsByNode[nid]||[])[0];const r=roots.find(x=>x.id===rid);const st=(stages.find(s=>s.id===nodeStage[nid])||{}).title;
-  markSel(rid?'rt:'+rid:'APEX');lightSpine(rid?['rt:'+rid]:['APEX']);
+  const inChain=conChain.some(c=>c.id===nid);
+  if(inChain){markSel('nd:'+nid);lightSpine(['rt:'+conRoot.id].concat(conChain.map(c=>'nd:'+c.id)));}
+  else{markSel(rid?'rt:'+rid:'APEX');lightSpine(rid?['rt:'+rid]:['APEX']);}
   const kids=n.children||[];
   rail.innerHTML=crumb([{label:'Problem',go:{t:'apex'}}].concat(r?[{label:short(r.title,20),go:{t:'root',id:rid}}]:[]).concat([{label:short(n.text,22)}]))
     +`<div class="rtype">${n.role==='REFUTED'?'Refuted cause (kept as evidence)':'Cause'}${st?` · ${esc(short(st,22))}`:''}</div>`
     +`<div class="rtitle">${esc(n.text)}</div>`
-    +`<div class="rchips">${kchip(n.kind)}${vtag(n)}${n.grade?`<span class="grade">${esc(n.grade)}</span>`:''}${n.role?`<span class="role ${ROLE[n.role]||''}">${esc(n.role)}</span>`:''}</div>`
+    +`<div class="rchips">${kchip(n.kind,n.validation)}${vtag(n)}${n.grade?`<span class="grade">${esc(n.grade)}</span>`:''}${n.role?`<span class="role ${ROLE[n.role]||'role-any'}">${esc(n.role)}</span>`:''}</div>`
     +(n.cite?`<div class="rcite"><span class="cl">evidence</span>${esc(n.cite)}</div>`:'')
     +`<div class="rlineage">${lineage(nid)}</div>`
     +(kids.length?`<h5>Because of (sub-causes)</h5>`+kids.map(childRow).join(''):'');}
@@ -482,35 +494,45 @@ function inspectRoot(rid){const r=roots.find(x=>x.id===rid);if(!r)return;
   if(r.isConstraint)return inspectConstraint();
   markSel('rt:'+rid);lightSpine(['rt:'+rid]);
   rail.innerHTML=crumb([{label:'Problem',go:{t:'apex'}},{label:'Root: '+short(r.title,20)}])+`<div class="rtype">Root cause</div><div class="rtitle">${esc(r.title)}</div>`
-    +(r.action?`<div class="raction"><b>→</b> ${esc(r.action)}</div>`:'')
+    +(r.action?`<div class="raction"><b>→</b> ${r.actionOrphaned?`<span class="role role-down">ORPHANED</span> <span style="opacity:.55;text-decoration:line-through">${esc(r.action)}</span>`:esc(r.action)}${''}${(r.restsOn&&r.restsOn.length)?`<div class="grade" style="margin-top:5px">rests on: ${r.restsOn.map(id=>`<span title="${esc(short(((nodeById[id]||{}).text)||id,70))}">${esc(id)}</span>`).join(', ')}</div>`:''}</div>`:'')
     +`<h5>Converges from</h5>`+(r.from||[]).map(id=>nodeById[id]?childRow(nodeById[id]):'').join('');}
 
-function inspectConstraint(){markSel('rt:'+conRoot.id);lightSpine(otherRoots.map(r=>'rt:'+r.id).concat(['rt:'+conRoot.id]));
+function inspectConstraint(){markSel('rt:'+conRoot.id);spine.classList.add('focusing');spine.querySelectorAll('.knode').forEach(n=>n.classList.add('on'));svg.querySelectorAll('path').forEach(p=>p.classList.add('on'));
   rail.innerHTML=crumb([{label:'Problem',go:{t:'apex'}},{label:'The constraint'}])+`<div class="rtype">System constraint · ${esc(con.type||'located')}</div><div class="rtitle">${esc(conRoot.title)}</div>`
-    +(conRoot.action?`<div class="raction"><b>→ do this:</b> ${esc(conRoot.action)}</div>`:'')
+    +(conRoot.action?`<div class="raction"><b>→ do this:</b> ${conRoot.actionOrphaned?`<span class="role role-down">ORPHANED</span> <span style="opacity:.55;text-decoration:line-through">${esc(conRoot.action)}</span>`:esc(conRoot.action)}${''}${(conRoot.restsOn&&conRoot.restsOn.length)?`<div class="grade" style="margin-top:5px">rests on: ${conRoot.restsOn.map(id=>`<span title="${esc(short(((nodeById[id]||{}).text)||id,70))}">${esc(id)}</span>`).join(', ')}</div>`:''}</div>`:'')
     +(con.statement?`<div class="rstmt" style="margin-top:12px">${esc(con.statement)}</div>`:'')
     +`<div class="rcite"><span class="cl">confidence</span>${conSupport()}</div>`
     +(con.unlocated?`<div class="rstmt" style="color:var(--muted)">${esc(con.unlocated)}</div>`:'')
     +`<h5>Converges from</h5>`+(conRoot.from||[]).map(id=>nodeById[id]?childRow(nodeById[id]):'').join('')
-    +(lbFragile?`<div class="stress-btn" id="stresstest">⚡ ${stressed?'Reset the stress-test':'Stress-test — what if the weakest evidence is wrong?'}</div>`
+    +(lbFragile?`<div class="stress-btn" id="stresstest" tabindex="0" role="button">⚡ ${stressed?'Reset the stress-test':'Stress-test — what if the weakest evidence is wrong?'}</div>`
       +(stressed?`<div class="stress-out"><b>Then the verdict moves.</b> The whole constraint rests on one node — “${esc(short(loadBearing.text,64))}” (${esc(loadBearing.kind)}/${esc(loadBearing.grade)}). ${esc(con.ifFalse||'If it falls, this is a MAP, not a verdict — run test #1 to re-settle.')}</div>`:''):'');}
 
 /* events */
 spine.addEventListener('click',e=>{const c=e.target.closest('.knode');if(!c)return;const sk=c.dataset.sk;
-  if(sk==='APEX')inspectApex(); else if(sk.startsWith('nd:'))inspectNode(sk.slice(3)); else if(sk.startsWith('rt:'))inspectRoot(sk.slice(3));});
+  if(sk==='APEX')inspectApex(); else if(sk.startsWith('nd:'))inspectNode(sk.slice(3)); else if(sk.startsWith('rt:'))inspectRoot(sk.slice(3));
+  if(matchMedia('(max-width:900px)').matches)rail.scrollIntoView({behavior:'smooth',block:'nearest'});});
 spine.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList.contains('knode')){e.preventDefault();e.target.click();}});
 rail.addEventListener('click',e=>{
   const st=e.target.closest('#stresstest'); if(st){stressed=!stressed;applyStress();inspectConstraint();return;}
-  const go=e.target.closest('[data-go]'); if(go){const g=JSON.parse(go.dataset.go);if(g.t==='apex')inspectApex();else if(g.t==='root')inspectRoot(g.id);return;}
+  const go=e.target.closest('[data-go]'); if(go){e.preventDefault();const g=JSON.parse(go.dataset.go);if(g.t==='apex')inspectApex();else if(g.t==='root')inspectRoot(g.id);return;}
   const rt=e.target.closest('[data-root]'); if(rt){inspectRoot(rt.dataset.root);return;}
   const nd=e.target.closest('[data-node]'); if(nd){inspectNode(nd.dataset.node);return;}
 });
+rail.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.closest('.child,[data-go],#stresstest')){e.preventDefault();e.target.click();}});
+}catch(err){ /* tree build failed — keep the memo/panels/census alive and say so where the tree would be */
+  const sp=document.getElementById('spine'); if(sp)sp.innerHTML='<div style="padding:28px;color:var(--muted);font-family:var(--mono);font-size:12.5px">⚠ tree render failed on this data ('+esc(err&&err.message)+') — the narrative, panels and census below are unaffected.</div>';
+  const rl=document.getElementById('rail'); if(rl)rl.innerHTML='<div class="rempty">Tree unavailable — see the panels below.</div>';
+  console.error('why-tree render:',err);
+}
 
 /* panels / census / foot */
-document.getElementById('negatives').innerHTML=(D.negatives||[]).map(n=>`<li>${esc(n)}</li>`).join('');
-document.getElementById('tests').innerHTML=(D.tests||[]).map(t=>`<div class="test"><div class="t">${t.rank?`<span class="rank">${esc(t.rank)}</span>`:''}${esc(t.test)}</div><div class="d">${esc(t.decides)}</div></div>`).join('');
+/* negatives: strings or {text, restsOn, orphaned} — restsOn ties the anti-recommendation to its evidence; orphaned = its node died */
+const restsOnHtml=ids=>ids.map(id=>`<span title="${esc(short(((nodeById[id]||{}).text)||id,70))}">${esc(id)}</span>`).join(', ');
+document.getElementById('negatives').innerHTML=(D.negatives||[]).filter(n=>typeof n==='string'?n:(n&&n.text)).map(n=>{const o=typeof n==='object'&&n;const t=o?(n.text||''):n;const ro=(o&&n.restsOn)||[];
+  return `<li>${o&&n.orphaned?`<span class="role role-down">ORPHANED${n.orphanedBy?' — rested on '+esc(n.orphanedBy):''}</span> <span style="opacity:.55;text-decoration:line-through">${esc(t)}</span>`:esc(t)}${ro.length?` <span class="grade">· rests on ${restsOnHtml(ro)}</span>`:''}</li>`}).join('');
+document.getElementById('tests').innerHTML=(D.tests||[]).map(t=>`<div class="test"><div class="t">${t.rank?`<span class="rank">${esc(t.rank)}</span>`:''}${esc(t.test)}</div><div class="d">${esc(t.decides)}</div>${t.result?`<div class="d" style="color:var(--k-meas);margin-top:4px">✓ ${esc(t.result)}</div>`:''}</div>`).join('');
 /* data request — hide the whole section if empty */
-const dreq=(D.dataRequest||[]);
+const dreq=(D.dataRequest||[]).slice().sort((a,b)=>(parseInt(String(a.rank||'').replace(/\D/g,''))||99)-(parseInt(String(b.rank||'').replace(/\D/g,''))||99));
 if(dreq.length){
   document.getElementById('dataRequest').innerHTML=dreq.map(r=>`<div class="dreq"><div class="w">${esc(r.want)}${r.rank?`<span class="rank">${esc(r.rank)}</span>`:''}</div>${r.impact?`<div class="i">${esc(r.impact)}</div>`:''}<div class="meta">${r.kind?`<span class="gap">${esc(r.kind)}</span>`:''}${r.from?`<span>from: ${esc(r.from)}</span>`:''}${(r.upgrades&&r.upgrades.length)?`<span>upgrades: ${r.upgrades.map(esc).join(', ')}</span>`:''}</div></div>`).join('');
 }else{
@@ -519,7 +541,7 @@ if(dreq.length){
 }
 const cs=D.census||{};const order=[["measured","MEASURED","--k-meas"],["inference","INFERENCE","--k-inf"],["hypothesis","HYPOTHESIS","--k-hyp"],["instance","INSTANCE","--k-inst"],["claim","CLAIM","--k-claim"],["external","EXTERNAL","--k-ext"]].filter(o=>cs[o[0]]>0);
 const csTot=order.reduce((a,o)=>a+(cs[o[0]]||0),0)||1; /* normalize defensively — converge sometimes emits raw counts, not fractions */
-document.getElementById('census').innerHTML=`<h4>Answer-kind census</h4><div class="census-bar">${order.map(o=>`<span style="flex:${cs[o[0]]};background:var(${o[2]})"></span>`).join('')}</div><div class="census-key">${order.map(o=>`<span><i style="background:var(${o[2]})"></i>${o[1]} ${Math.round(cs[o[0]]/csTot*100)}%</span>`).join('')}</div>${cs.bottomLine?`<div class="bottom">${esc(cs.bottomLine)}</div>`:''}`;
+document.getElementById('census').innerHTML=`<h4>Answer-kind census</h4><div class="census-bar">${order.map(o=>`<span style="flex:${(cs[o[0]]||0)/csTot*100};background:var(${o[2]})"></span>`).join('')}</div><div class="census-key">${order.map(o=>`<span><i style="background:var(${o[2]})"></i>${o[1]} ${Math.round(cs[o[0]]/csTot*100)}%</span>`).join('')}</div>${cs.bottomLine?`<div class="bottom">${esc(cs.bottomLine)}</div>`:''}`;
 document.getElementById('foot').textContent=`Why Tree · ${p.method||'Goldratt CRT'} · spine = decide, rail = follow & validate · a map of where to look, not a verdict when evidence is thin.`;
 
 /* narrative — the read-first memo at the top (hide if absent) */
@@ -542,8 +564,8 @@ if(levers.length){
   if(D.sizing)document.getElementById('sizing').innerHTML=`<div class="sizing"><b>Do the levers sum to the target?</b> ${esc(D.sizing.bottomLine||'')}${D.sizing.gapToTarget?` <span style="color:var(--muted)">· gap: ${esc(D.sizing.gapToTarget)}</span>`:''}</div>`;
 }else{const ls=document.getElementById('levers-sec');if(ls)ls.style.display='none';}
 
-/* open on the answer (answer-first), constraint path lit */
-inspectConstraint();
+/* open on the answer (answer-first), chain fully lit */
+try{inspectConstraint();}catch(e){}
 </script>
 </body>
 </html>

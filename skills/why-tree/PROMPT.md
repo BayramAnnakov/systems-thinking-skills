@@ -1,6 +1,6 @@
 # Why Tree — copy-paste prompt (ChatGPT, Claude.ai, Cursor, Perplexity)
 
-> **This is the degraded, single-context version.** The real skill is multi-agent — it fans 20-55 independent agents across the branch-space and runs an *independent* adversarial refute pass (Claude Code's `Workflow` tool). A single LLM can't truly do that; this prompt keeps the *discipline* (grade every node, refute, converge to one, honest census) but you lose the parallel branch-space and the independence of the refutation. For the real thing, run `/why-tree` in Claude Code.
+> **This is the degraded, single-context version.** The real skill is multi-agent — it fans 10-60 independent agents across the branch-space and runs an *independent* adversarial refute pass (Claude Code's `Workflow` tool). A single LLM can't truly do that; this prompt keeps the *discipline* (grade every node, validate the numbers, refute, converge to one, honest census) but you lose the parallel branch-space and the independence of the refutation. For the real thing, run `/why-tree` in Claude Code.
 
 Copy everything between `===PROMPT START===` and `===PROMPT END===`, paste it into your LLM, then paste your problem (and any evidence you can give it).
 
@@ -19,6 +19,9 @@ Tag each node with an answer-kind, a confidence grade, and a citation:
 - Grade: Strong / Mod / Weak. A node sourced to one person is a CLAIM, not MEASURED. A HYPOTHESIS with no nameable test is not allowed — find the test or drop it.
 - If one more query over evidence *I already gave you* would settle a node, say so and treat it as a research gap, not a real unknown.
 
+## 3b. A number is not a fact (validate MEASURED before trusting it)
+MEASURED certifies a number exists, not that it means what the node claims. For every MEASURED node, state its validation: **raw** (pipeline unchecked — caps at grade Mod, may NOT carry the verdict), **validated** (checked: who's in the denominator — bots/test/internal? does the metric's definition match the claim — placed vs paid, sessions vs users? window representative? attribution sound? extract unbiased? no join-explosion / average-of-averages / partial-period?), or **contested** (two sources disagree — keep BOTH values visible; a sign-level disagreement is a finding, never a fact). Prefer the source the business already trusts (a curated dashboard/P&L) for triangulation. A trend claim ("dropped Jan→Jun") without YoY/seasonal normalization, constant definitions at both endpoints, and enough n to clear the noise floor is INFERENCE/Weak at best, never MEASURED.
+
 ## 4. Deepen the load-bearing branches to bedrock
 For the branches that could be the constraint, recursively ask "why does THIS happen?" until you hit bedrock — a market fact, a deliberate policy, or a law of the domain you can't or won't go beneath. Keep the chain visible (apex → because → because → … → bedrock).
 
@@ -26,11 +29,11 @@ For the branches that could be the constraint, recursively ask "why does THIS ha
 For each load-bearing branch, argue AGAINST it from distinct angles (data-says-otherwise / mechanism-broken / survivorship-selection / mis-attribution). Mark branches you kill as REFUTED or DOWNGRADED and KEEP them, with the evidence that killed them — they're the most useful part. (You are one mind doing this; flag that this refutation is not independent.)
 
 ## 6. Converge to ONE
-Collapse the survivors into 3-5 root causes and name THE single system constraint — the one that, if removed, unblocks the most. Say whether it's a POLICY/ownership constraint or a TOOLING one (default suspicion: a policy wearing a tooling costume). If it's a goal-conflict, name the false assumption (Evaporating Cloud).
+Collapse the survivors into 3-5 root causes and name THE single system constraint — the one that, if removed, unblocks the most. Say whether it's a POLICY/ownership constraint or a TOOLING one (default suspicion: a policy wearing a tooling costume). If it's a goal-conflict, name the false assumption (Evaporating Cloud). Exception — if the apex is a growth TARGET ("hit N by date"): also decompose the ADDITIVE paths to N (levers), size each (volume × conversion → contribution), and say honestly whether they sum to N. Levers are parallel paths, not rival causes — deprioritize with a reason, never refute one away.
 
 ## 7. Output
 - The constraint (located), as a multi-LEVEL chain to bedrock — not a one-liner.
-- What to DO; what NOT to do (the negative branches — fixes that backfire).
-- The single cheapest test that would fork-decide the conclusion.
-- An honest evidence census: roughly what % is MEASURED vs the decisive % that's still HYPOTHESIS. If the constraint-locating nodes are HYPOTHESIS, your headline is "a map of where to look, not a verdict" — say so out loud.
+- What to DO; what NOT to do (the negative branches — fixes that backfire). For each recommendation, name the node(s) it rests on — if that node later dies, the recommendation dies with it.
+- The single cheapest test that would fork-decide the conclusion. When I come back with test results, UPDATE the tree (re-grade the touched nodes, keep killed ones visible as REFUTED) rather than rebuilding it.
+- An honest evidence census: roughly what % is MEASURED (and how much of that is raw vs validated) vs the decisive % that's still HYPOTHESIS. **Your FIRST line must declare: VERDICT (decisive nodes measured + validated) or MAP (anything decisive is a hypothesis, raw, or contested — then name the deciding test).** Never let a confident headline outrun this census.
 ===PROMPT END===
