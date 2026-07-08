@@ -1,18 +1,20 @@
 {
-  "apex": "Why do <50% of \"activated\" users return in week 2? & other escaping tests \ud83c\udfaf",
+  "apex": "Why do <50% of \"activated\" users return in week 2? & other escaping tests 🎯",
   "provenance": {
     "method": "Goldratt CRT",
     "depth": "deep",
     "agents": 29,
-    "date": "test-edge"
+    "date": "test-edge",
+    "mode": "idea-audit",
+    "quarantine": "asserted"
   },
   "corrections": [
-    "\"It's a pricing problem\" \u2014 REFUTED. Escaping check: <b>not bold</b> & \"quoted\" should display literally."
+    "\"It's a pricing problem\" — REFUTED. Escaping check: <b>not bold</b> & \"quoted\" should display literally."
   ],
   "stages": [
     {
       "id": "S1",
-      "title": "Stage 1 \u00b7 Arrive & <Connect>",
+      "title": "Stage 1 · Arrive & <Connect>",
       "nodes": [
         {
           "id": "A",
@@ -20,7 +22,7 @@
           "kind": "MEASURED",
           "grade": "Strong",
           "role": "LEVER",
-          "cite": "n=1,234, 30d window; contains <html> & \"quotes\" \ud83c\udfaf",
+          "cite": "n=1,234, 30d window; contains <html> & \"quotes\" 🎯",
           "children": [
             {
               "id": "A1",
@@ -42,7 +44,7 @@
         },
         {
           "id": "R",
-          "text": "Refuted branch \u2014 should render struck-through and dimmed",
+          "text": "Refuted branch — should render struck-through and dimmed",
           "kind": "CLAIM",
           "grade": "Weak",
           "role": "REFUTED",
@@ -50,11 +52,11 @@
         },
         {
           "id": "D",
-          "text": "Downgraded branch \u2014 blocker demoted to friction",
+          "text": "Downgraded branch — blocker demoted to friction",
           "kind": "INFERENCE",
           "grade": "Mod",
           "role": "DOWNGRADED",
-          "cite": "6/6 had a 2nd seat \u2192 reducer, not blocker"
+          "cite": "6/6 had a 2nd seat → reducer, not blocker"
         }
       ]
     },
@@ -106,10 +108,10 @@
     "rootId": "R0",
     "type": "policy",
     "statement": "Located policy constraint. Escaping: <x> & \"y\". Needs no more data.",
-    "unlocated": "The funnel/mechanism constraint is still UNLOCATED \u2014 one query pins it."
+    "unlocated": "The funnel/mechanism constraint is still UNLOCATED — one query pins it."
   },
   "negatives": [
-    "Auto-do the thing to boost the metric \u2192 backfire with <special> & degenerate artifacts"
+    "Auto-do the thing to boost the metric → backfire with <special> & degenerate artifacts"
   ],
   "tests": [
     {
@@ -125,7 +127,54 @@
     "instance": 0.1,
     "claim": 0.05,
     "external": 0,
-    "bottomLine": "Hypothesis-heavy at the decision point. Map, not verdict. <escaping> & \"test\" \ud83c\udfaf."
+    "bottomLine": "Hypothesis-heavy at the decision point. Map, not verdict. <escaping> & \"test\" 🎯."
   },
-  "verdict": "Verdict line: this is the one-line ANSWER, rendered in amber under the apex. Escaping here too: <b> & \"x\"."
+  "verdict": "Verdict line: this is the one-line ANSWER, rendered in amber under the apex. Escaping here too: <b> & \"x\".",
+  "idea": {
+    "statement": "Build a <script>alert('x')</script> \"AI\" dashboard & knowledge-wiki — émojis too 🧪",
+    "claimedProblem": "Testing escaping & long text in the idea panel",
+    "mechanism": "tooling",
+    "buyer": "unclear <b>buyer</b>"
+  },
+  "ideaFit": {
+    "verdict": "misses-constraint",
+    "addresses": [
+      "A",
+      "D"
+    ],
+    "why": "Edge fixture: the idea addresses peripheral nodes with special chars <>&\"' and rests on a HYPOTHESIS node, so the badge must show 'verify first'.",
+    "restsOn": [
+      "M",
+      "nonexistent-id"
+    ],
+    "policyToolMismatch": {
+      "flag": true,
+      "note": "constraint is a policy; the <tool> can't move it"
+    },
+    "absorbedPain": {
+      "state": "chronic-absorbed",
+      "kind": "HYPOTHESIS",
+      "grade": "Mod",
+      "cite": "edge cite with & < > chars",
+      "test": "pre-sell to 5 buyers",
+      "gap": "experiment"
+    },
+    "segmentFork": {
+      "diesWhere": "segment A & B",
+      "livesWhere": "segment C > D",
+      "kind": "HYPOTHESIS",
+      "gap": "external",
+      "test": "5 discovery calls"
+    },
+    "redirect": {
+      "reframedProblem": "the reframed 'problem'",
+      "whatWouldDissolve": "an ownership move"
+    },
+    "contested": "fit skeptic disagrees — <em>should render escaped</em>",
+    "orphaned": true,
+    "orphanedBy": "M",
+    "refutation": {
+      "contested": "fit skeptic disagrees — <em>should render escaped</em>"
+    }
+  }
 }

@@ -26,6 +26,17 @@ After branches are deepened and graded:
 
 If the core constraint is a **goal-conflict** ("we must protect the dying revenue model" vs "we must grow the new one"), it's an **Evaporating Cloud** - a conflict that feels unbreakable because both sides serve a shared higher goal. Break it by surfacing the false assumption under one arrow. (Source-case example: "growing agent-completions cannibalizes per-seat revenue" dissolved once you see per-seat is *already* dying - so completions are the *replacement* metric, not a cannibal. The conflict evaporates.)
 
+## Evaluating an idea against the tree (CRT → FRT: the injection test)
+
+Goldratt's sequence for solutions: after the Current-Reality Tree comes the **Future-Reality Tree** — a proposed fix is an **injection**, tested by asking which CRT nodes it flips and whether the constraint actually moves. The corollary most people skip: **an idea is never judged against the symptom, only against the tree.** "Onboarding is slow; my product speeds up knowledge access" pattern-matches at the symptom level and can still miss the constraint entirely (the field case: the constraint was that nobody *owned* the onboarding process — a policy node no knowledge tool touches).
+
+Idea Audit mode operationalizes this: diagnose the problem the idea *presupposes* (with the idea quarantined, so the tree isn't built to flatter the pitch), then map the idea onto the finished tree — does it dissolve the constraint, relieve a symptom, miss, or backfire (a negative branch, run forward like any fix)? Two idea-specific reservations extend the CLR:
+
+- **The absorbed-pain reservation.** A chronic UDE the system has compensated around for years is part of its equilibrium: the cost is budgeted, the workarounds are staffed, and willingness-to-pay for removing it approaches zero even when the pain is real and everywhere — *widespread ≠ payable*. This is still a graded claim about buyer behavior, not a verdict: attach the test (pre-sell, budget-line check, adjacent purchases).
+- **The n=1 reservation.** A CRT diagnoses ONE system. The idea's market is the set of systems where the located constraint — and the pain's acuteness — actually holds, so the honest output is a **segment fork** ("dies where X, may live where Y"), which turns a kill into ICP selection.
+
+And always the **redirect**: the tree's reframed problem is the alternative idea space — what *would* dissolve the constraint is often a better product than the one on trial.
+
 ## CLR audit - Categories of Legitimate Reservation (Phase 4)
 
 Goldratt's checklist for validating cause-effect logic. Apply to every load-bearing arrow:

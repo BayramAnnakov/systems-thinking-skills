@@ -223,6 +223,19 @@
   .sizing{font-size:14px;color:#e9d8b8;background:var(--target-soft);border:1px solid rgba(245,165,36,.32);border-left:3px solid var(--target);border-radius:0 10px 10px 0;padding:14px 16px;margin-top:16px;line-height:1.5}
   .sizing b{color:var(--target)}
 
+  /* idea on trial — Idea Audit only (hidden when ideaFit absent) */
+  .idea-panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin-top:10px}
+  .idea-panel .iv{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px;border-radius:6px;margin-bottom:10px}
+  .iv-pass{color:#9ff0c2;background:rgba(70,208,138,.16);border:1px solid rgba(70,208,138,.4)}
+  .iv-mid{color:#e9d8b8;background:var(--target-soft);border:1px solid rgba(245,165,36,.4)}
+  .iv-kill{color:#f6a9b8;background:rgba(240,105,126,.13);border:1px solid rgba(240,105,126,.45)}
+  .idea-panel .istmt{font-size:14.5px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.4}
+  .idea-panel .iwhy{font-size:13.5px;color:#cfd3da;line-height:1.55;margin-bottom:4px;max-width:76ch}
+  .idea-panel .irow{font-size:12.5px;color:var(--muted);line-height:1.55;margin-top:9px;border-top:1px dashed var(--line);padding-top:9px}
+  .idea-panel .irow b{color:var(--ink);font-weight:600}
+  .idea-panel .itest{font-family:var(--mono);font-size:11px;color:var(--k-hyp);margin-top:3px}
+  .idea-panel .icontest{font-size:12.5px;color:#f6a9b8;border-left:2px solid var(--k-claim);padding-left:10px;margin-top:12px;line-height:1.5}
+
   .foot{color:var(--faint);font-family:var(--mono);font-size:11.5px;margin-top:46px;padding-top:18px;border-top:1px solid var(--line)}
 
   @media (max-width:900px){
@@ -329,6 +342,11 @@
     <summary>Read first — the diagnosis in plain words</summary>
     <div id="narrative-body"></div>
   </details>
+  <div id="idea-sec">
+    <h2 class="sec"><span class="n">◇</span> The idea on trial — judged against the tree, not the symptom</h2>
+    <p class="sec-sub">The idea was quarantined while the tree was built; this is the fit-check. A kill is graded like any claim — the willingness-to-pay call carries its own test.</p>
+    <div class="idea-panel" id="ideafit"></div>
+  </div>
   <div id="levers-sec">
     <h2 class="sec"><span class="n">◆</span> The levers — paths to the target</h2>
     <p class="sec-sub">The additive paths to the number, each sized (volume × conversion → contribution). A dropped lever stays visible with its reason — a path deprioritized, not a cause refuted.</p>
@@ -388,7 +406,7 @@ if(vStat==='map'){vEl.classList.add('mapv');
     ((D.tests&&D.tests[0])?`<p class="vmap-note">Decided by: ${esc(D.tests[0].test)}</p>`:''));}
 /* the 'verdict' badge is inserted AFTER loadBearing/lbFragile are computed (below) so its copy can be honest about the weakest link */
 const p=D.provenance||{};
-document.getElementById('provenance').innerHTML=[["Method",p.method],["Depth",p.depth],["Agents",p.agents],["Built",p.date],["Triage",p.triage&&p.triage.decision||null]].filter(x=>x[1]!=null&&x[1]!==false).map(x=>`${esc(x[0])} <b>${esc(x[1])}</b>`).join('<span></span>')+((p.triage&&p.triage.receipt)?`<span style="color:var(--faint)">${esc(p.triage.receipt)}</span>`:'');
+document.getElementById('provenance').innerHTML=[["Method",p.method],["Depth",p.depth],["Mode",p.mode],["Agents",p.agents],["Built",p.date],["Triage",p.triage&&p.triage.decision||null]].filter(x=>x[1]!=null&&x[1]!==false).map(x=>`${esc(x[0])} <b>${esc(x[1])}</b>`).join('<span></span>')+((p.triage&&p.triage.receipt)?`<span style="color:var(--faint)">${esc(p.triage.receipt)}</span>`:'');
 if(D.corrections&&D.corrections.length)document.getElementById('banner').innerHTML=`<div class="banner"><h3>⚠ Read first — live corrections from the data</h3><ul>${D.corrections.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`;
 const lgG=(label,inner)=>`<span style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap"><span>${label}</span>${inner}</span>`;
 document.getElementById('legend').innerHTML=lgG('EVIDENCE',Object.keys(KIND).map(k=>`<span class="chip ${KIND[k].c}">${k}</span>`).join(''))+'<span class="sep"></span>'+lgG('ROLE',['ROOT','CONSTRAINT','LEVER','REFUTED'].map(r=>`<span class="role ${ROLE[r]}">${r}</span>`).join(''))+'<span class="sep"></span>'+lgG('MEASURED PIPELINE',['raw','validated','triangulated','contested'].map(v=>`<span class="vt vt-${v}">${v}</span>`).join(''))+'<span class="grade">· grade Strong/Mod/Weak · dashed = rests on soft evidence · raw = pipeline unchecked, caps at Mod</span>';
@@ -563,6 +581,37 @@ if(levers.length){
     +`</div>`;}).join('');
   if(D.sizing)document.getElementById('sizing').innerHTML=`<div class="sizing"><b>Do the levers sum to the target?</b> ${esc(D.sizing.bottomLine||'')}${D.sizing.gapToTarget?` <span style="color:var(--muted)">· gap: ${esc(D.sizing.gapToTarget)}</span>`:''}</div>`;
 }else{const ls=document.getElementById('levers-sec');if(ls)ls.style.display='none';}
+
+/* idea on trial — Idea Audit only (hide the whole section when ideaFit is absent).
+   A deferred (test-plan) or failed fit-check still renders a notice — the user's question must never silently vanish. */
+const IF=D.ideaFit;
+if(IF&&IF.verdict){
+  const vcls={'dissolves-constraint':'iv-pass','relieves-symptom':'iv-mid','misses-constraint':'iv-kill','negative-branch':'iv-kill'}[IF.verdict]||'iv-mid';
+  /* census honesty reaches the badge: a fit verdict resting on hypothesis/claim or raw/contested nodes — or one
+     the skeptic contested — is not act-ready. 'scout-consensus' is the ship-direct sentinel: always verify-first. */
+  const weakFit=!!IF.contested||(IF.restsOn||[]).some(id=>{if(id==='scout-consensus')return true;const n=nodeById[id];return !n||['HYPOTHESIS','CLAIM'].includes(n.kind)||(n.kind==='MEASURED'&&['raw','contested'].includes(n.validation));});
+  /* "includes the constraint" is COMPUTED from the constraint chain, never asserted from the verdict enum */
+  const conIdSet=new Set();(function(){const cr=(D.roots||[]).find(r=>r.isConstraint);if(!cr)return;if(cr.id)conIdSet.add(cr.id);(cr.from||[]).forEach(i=>conIdSet.add(i));(function w(ns){(ns||[]).forEach(n=>{if(n&&n.id)conIdSet.add(n.id);if(n)w(n.children)})})(cr.children);})();
+  const hitsCon=(IF.addresses||[]).some(id=>conIdSet.has(id));
+  const ap=IF.absorbedPain||{},sf=IF.segmentFork||{},rd=IF.redirect||{},pm=IF.policyToolMismatch||{},rf=IF.refutation||{};
+  const orphBy=IF.orphanedBy||(typeof IF.orphaned==='string'?IF.orphaned:'');
+  document.getElementById('ideafit').innerHTML=
+    `<span class="iv ${weakFit?'iv-mid':vcls}">${esc(IF.verdict||'')}${weakFit?' · verify first':''}</span>`
+    +((D.idea&&D.idea.statement)?`<div class="istmt">${esc(D.idea.statement)}</div>`:'')
+    +((D.idea&&(D.idea.claimedProblem||D.idea.buyer))?`<div class="irow" style="border-top:none;padding-top:0;margin-top:2px">${D.idea.claimedProblem?`<b>Claimed problem</b> ${esc(D.idea.claimedProblem)} <span class="grade">· CLAIM until measured</span>`:''}${D.idea.buyer?`${D.idea.claimedProblem?' · ':''}<b>Buyer</b> ${esc(D.idea.buyer)}`:''}</div>`:'')
+    +(IF.why?`<div class="iwhy">${esc(IF.why)}${(IF.restsOn&&IF.restsOn.length)?` <span class="grade">· rests on ${restsOnHtml(IF.restsOn)}</span>`:''}</div>`:'')
+    +((IF.addresses&&IF.addresses.length)?`<div class="irow"><b>Addresses</b> ${restsOnHtml(IF.addresses)}${hitsCon?' — including the constraint':' — none of these is the constraint'}</div>`:'')
+    +(pm.flag?`<div class="irow"><b>Policy–tool mismatch</b> ${esc(pm.note||'the constraint is policy/ownership; a tool that leaves ownership untouched cannot dissolve it')}</div>`:'')
+    +(ap.state?`<div class="irow"><b>Absorbed pain</b> ${esc(ap.state)} ${kchip(ap.kind)}${ap.grade?`<span class="grade">${esc(ap.grade)}</span>`:''}${ap.cite?` — ${esc(ap.cite)}`:''}${ap.test?`<div class="itest">test: ${esc(ap.test)}</div>`:''}</div>`:'')
+    +((sf.diesWhere||sf.livesWhere)?`<div class="irow"><b>Segment fork</b> dies where: ${esc(sf.diesWhere||'—')} · may live where: ${esc(sf.livesWhere||'—')} ${kchip(sf.kind)}${sf.gap?`<span class="grade">gap: ${esc(sf.gap)}</span>`:''}${sf.test?`<div class="itest">test: ${esc(sf.test)}</div>`:''}</div>`:'')
+    +((rd.reframedProblem||rd.whatWouldDissolve)?`<div class="irow"><b>Redirect</b> ${rd.reframedProblem?`the reframed problem — ${esc(rd.reframedProblem)}`:''}${rd.whatWouldDissolve?`${rd.reframedProblem?' · ':''}what would dissolve it — ${esc(rd.whatWouldDissolve)}`:''}</div>`:'')
+    +(IF.contested?`<div class="icontest">⚖ contested by the fit skeptic — ${esc(IF.contested)}</div>`:'')
+    +(rf.survived?`<div class="irow" style="color:var(--k-meas)">⚖ survived one refutation attempt — ${esc(rf.survived)}</div>`:'')
+    +(rf.skipped?`<div class="icontest">⚠ un-refuted — ${esc(rf.skipped)}</div>`:'')
+    +(IF.orphaned?`<div class="icontest"><span class="role role-down">ORPHANED</span>${orphBy?` rested on ${esc(orphBy)} —`:''} a node this verdict stood on fell; re-derive or retract.</div>`:'');
+}else if(D.ideaFitDeferred||D.ideaFitError){
+  document.getElementById('ideafit').innerHTML=`<div class="icontest">${D.ideaFitError?'⚠ ':'ℹ '}${esc(D.ideaFitError||D.ideaFitDeferred)}${D.idea&&D.idea.statement?`<div class="istmt" style="margin-top:8px">${esc(D.idea.statement)}</div>`:''}</div>`;
+}else{const is=document.getElementById('idea-sec');if(is)is.style.display='none';}
 
 /* open on the answer (answer-first), chain fully lit */
 try{inspectConstraint();}catch(e){}

@@ -65,6 +65,7 @@ A node can be `MEASURED / Weak` (real number, tiny n) or `EXTERNAL / Strong` (we
 |------|-------|
 | **ROOT** | A point where branches converge - a root cause (label R0/R1...). |
 | **CONSTRAINT?** | A candidate for THE system constraint. Exactly one should end up as THE constraint. |
+| **CONSTRAINT** | THE located system constraint — candidates resolve to exactly one of these at converge. |
 | **LEVER** | A fixable point with good leverage. |
 | **NEGATIVE** | A fix that would backfire - kept in the tree as a warning. |
 | **REFUTED** | Killed by the adversarial pass - kept visible with the killing evidence. |

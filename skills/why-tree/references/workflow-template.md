@@ -12,7 +12,6 @@ The workflow must end by returning an object matching this shape. `assets/tree-t
 {
   "apex": "Net-new signups are short of the N target by <date>",
   "verdict": "One-line answer / headline (the so-what) - rendered prominently under the apex. apex is the STATEMENT of the undesirable effect; verdict is the ANSWER.",
-  "depth": "standard",
   "stages": [
     {
       "id": "S1", "title": "Stage 1 - Arrive",
@@ -44,8 +43,8 @@ The workflow must end by returning an object matching this shape. `assets/tree-t
     "statement": "System constraint = ownership/policy; located, needs no more data.",
     "unlocated": "Mechanism constraint still unlocated - one query pins it." },
   "negatives": [
-    "Auto-invite a user's whole contact list -> spam complaints + a deliverability cliff",
-    "Keystone on a behavior the data says doesn't exist (0 of 80 trials did it)"
+    { "text": "Auto-invite a user's whole contact list -> spam complaints + a deliverability cliff", "restsOn": [] },
+    { "text": "Keystone on a behavior the data says doesn't exist (0 of 80 trials did it)", "restsOn": ["A1"] }
   ],
   "tests": [
     { "test": "Join origin -> completion + signup-date (1 query)",
@@ -89,6 +88,35 @@ The workflow must end by returning an object matching this shape. `assets/tree-t
     "bottomLine":"The levers do NOT credibly sum to N yet — the target leans entirely on the un-instrumented L1." }
 }
 ```
+
+**Idea Audit additions (only when the run evaluates an idea).** The idea is captured at Phase 0 and **quarantined**: passed in via `args.idea` but NEVER interpolated into a scout/lens/deepen/refute prompt, and scrubbed from the frozen evidence brief (anti-anchoring — a swarm that knows the pitch bends toward the causes the pitch needs). Only the post-converge fit-check stage (7b², below) reads it, emitting `idea` + `ideaFit`:
+
+```json
+{ "...": "idea-audit additions (only when args.idea is set)",
+  "idea": { "statement":"Ingest meeting recordings + docs → auto-generate an onboarding program + knowledge search",
+    "claimedProblem":"Contract engineers take 3-5 months to onboard, with no early signal on fit or progress",
+    "mechanism":"knowledge navigation", "buyer":"the client? the staffing contractor? — unowned" },
+  "ideaFit": {
+    "verdict": "misses-constraint",
+    "addresses": ["A1","C2"],
+    "why": "The idea shortens knowledge navigation; the located constraint is ownership of the onboarding process — a policy node the tool leaves untouched.",
+    "restsOn": ["M","R0a"],
+    "policyToolMismatch": { "flag": true, "note": "Constraint is policy/ownership; a tool that doesn't move ownership can't dissolve it." },
+    "absorbedPain": { "state":"chronic-absorbed", "kind":"HYPOTHESIS", "grade":"Mod", "gap":"experiment",
+      "cite":"15-20-year-old systems have budgeted around slow onboarding for as long — the cost is internalized",
+      "test":"Pre-sell to 5 target buyers; check whether any budget line or adjacent purchase exists" },
+    "segmentFork": { "diesWhere":"client-owned onboarding of 1-2 contractors, pain absorbed for years",
+      "livesWhere":"100-person cohorts with an acute trigger and a named onboarding owner",
+      "kind":"HYPOTHESIS", "gap":"external", "test":"5 discovery calls in the lives-where segment" },
+    "redirect": { "reframedProblem":"Know within 2 weeks whether engineer A is onboarding better than B",
+      "whatWouldDissolve":"An early-signal instrument owned by the contractor — plus the ownership move itself" },
+    "refutation": { "contested":"the fit skeptic's counter-argument (or {survived: what it attacked and lost on} / {skipped: 'fit skeptic failed to run'})" },
+    "contested": "mirror of refutation.contested — kept for the renderer; absent when the fit survived"
+  }
+}
+```
+
+`ideaFit.verdict` ∈ `dissolves-constraint` | `relieves-symptom` | `misses-constraint` | `negative-branch`. Every check is an evidence-graded claim (kind/grade + a nameable test), never a pronouncement; `addresses`/`restsOn` must reference real node ids so the update loop's orphan sweep covers the idea verdict like any recommendation.
 
 ## Converge schema (paste into the converge `agent()` call) — prevents the two bugs seen in testing
 
@@ -218,7 +246,7 @@ return { scouts, judge, refute,
                            : 'scouts diverged: '+judge.clusters }
 ```
 
-Routing (orchestrator, after this returns): `ship-direct` → write the mini decision-doc from the consensus + receipt, stamp `provenance.triage`, stop. `escalate` → show the user the depth gate WITH the receipt (that's what they're buying the swarm to resolve), seed `scouts[].constraint` lines into the main run's dedup pool as extra branches — **never into the lens prompts** (anti-anchoring). Stamp the gate outcome into the final tree's `provenance.triage = {scouts:3, converged, decision, receipt}` so gate calibration is auditable across runs.
+Routing (orchestrator, after this returns): `ship-direct` → write the mini decision-doc from the consensus + receipt, stamp `provenance.triage`, stop. **Idea Audit × ship-direct:** there is no tree, so run the 7b² fit pair against the consensus `{constraint, decisiveEvidence}` with a DEGRADED contract — `addresses`/`restsOn` use the sentinel `['scout-consensus']` instead of node ids, and the mini-doc's idea section is FORCED to the verify-first treatment ("judged against a scout consensus, not a drilled tree"); a full orphanable verdict needs the full run. `escalate` → show the user the depth gate WITH the receipt (that's what they're buying the swarm to resolve), seed `scouts[].constraint` lines into the main run's dedup pool as extra branches — **never into the lens prompts** (anti-anchoring). Stamp the gate outcome into the final tree's `provenance.triage = {scouts:3, converged, decision, receipt}` so gate calibration is auditable across runs.
 
 ## The script
 
@@ -229,7 +257,7 @@ export const meta = {
   phases: [
     { title: 'Branch fan-out' }, { title: 'Deepen + grade' }, { title: 'Measure audit' },
     { title: 'Refute' }, { title: 'Converge' }, { title: 'Drill constraint' },
-    { title: 'Levers + size' }, { title: 'Narrate' },
+    { title: 'Levers + size' }, { title: 'Idea fit' }, { title: 'Narrate' },
   ],
 }
 
@@ -246,6 +274,20 @@ const DEPTH = A.depth || 'standard'                          // 'standard' | 'de
 const TEST_PLAN = DEPTH === 'test-plan'                      // decisive sources are HUMAN-ONLY → deliverable = branch-map + ranked cheapest-tests + Data Request (markdown); skips drill + the HTML machinery
 const APEX_TYPE = A.apexType || 'symptom'                    // 'symptom' (X is leaking/breaking) | 'target' (hit N by date — a chosen number reached by additive paths)
 const LEVER_MODE = APEX_TYPE === 'target'                   // target apex → ALSO decompose into additive levers + size them (a constraint tree alone hands ONE bottleneck, not a portfolio that sums to N)
+// IDEA AUDIT (quarantined): {statement, claimedProblem, mechanism, buyer} — read ONLY by the fit-check
+// stage (7b²). NEVER interpolate IDEA into a scout/lens/deepen/refute prompt, and make sure SOURCES /
+// the frozen evidence brief was scrubbed of the pitch at Phase 1: a swarm that knows the pitch bends
+// toward the causes the pitch needs, and the fit-check becomes circular (Guardrail 13).
+const IDEA = A.idea || null
+// QUARANTINE ASSERT (fail loud, zero agents) — the leak vectors into every prompt are APEX and SOURCES,
+// not the lens boilerplate. This catches VERBATIM leaks only; paraphrase ("no early signal on progress"
+// as an apex clause when the idea IS an early-signal tool) is on the orchestrator — the Phase-0 (a3)
+// apex-scrub rule. Post-run this stamps provenance.quarantine='asserted' for the Phase-4 CLR check.
+if (IDEA) {
+  const leakTerms = [IDEA.statement, IDEA.mechanism].filter(Boolean).map(t => String(t).toLowerCase())
+  if ([APEX, SOURCES].some(s => leakTerms.some(t => String(s).toLowerCase().includes(t))))
+    throw new Error('QUARANTINE BREACH: the idea leaked into APEX/SOURCES — scrub the pitch before launching')
+}
 const LENSES = {
   standard: ['funnel/mechanics', 'data-skeptic', 'competitive/external', 'customer-psychology', 'economics/incentives', 'product-eng-constraint'],
   deep:     ['funnel/mechanics', 'data-skeptic', 'competitive/external', 'customer-psychology', 'economics/incentives', 'product-eng-constraint', 'metrics/measurement', 'distribution/discovery', 'org/ownership'],
@@ -261,7 +303,9 @@ const MAX_REFUTE = { standard: 8,  deep: 14, 'test-plan': 6 }[DEPTH]   // max lo
 const MAX_AUDIT  = { standard: 6,  deep: 10, 'test-plan': 4 }[DEPTH]   // max load-bearing MEASURED nodes sent to the pipeline audit
 
 const BRANCH_SCHEMA = { type:'object', properties:{ branches:{ type:'array', items:{ type:'object',
-  properties:{ text:{type:'string'}, stage:{type:'string'}, kind:{type:'string'}, grade:{type:'string'}, cite:{type:'string'},
+  properties:{ text:{type:'string'}, stage:{type:'string'},
+    kind:{type:'string', enum:['MEASURED','INSTANCE','EXTERNAL','CLAIM','INFERENCE','HYPOTHESIS','FRAMING']},
+    grade:{type:'string', enum:['Strong','Mod','Weak']}, cite:{type:'string'},
     validation:{type:'string', enum:['raw','validated','triangulated','contested']} },
   required:['text','stage','kind','grade','cite'] }}}, required:['branches'] }
 
@@ -441,7 +485,7 @@ if (!TEST_PLAN && cRoot && chainDepth(cRoot.children || []) < 2) {   // test-pla
   if (chain && chain.children && chain.children.length) cRoot.children = chain.children
 }
 
-// 6c) WIRING FIX (deterministic) — converge has been observed emitting stage TITLES in roots[].from instead
+// 6-fix) WIRING FIX (deterministic) — converge has been observed emitting stage TITLES in roots[].from instead
 // of node ids, which breaks the viz's edge-lighting and the constraint's "converges from" tally. Map titles
 // to that stage's node ids in plain code; leave real ids untouched.
 ;(converged.roots || []).forEach(r => {
@@ -466,7 +510,7 @@ if (refuteWarning) converged._refuteWarning = refuteWarning  // carried through 
 if (measurableWarning) converged._measurableWarning = measurableWarning  // in-hand gaps that survived — surface in decision-doc/CLR
 // Stamp provenance from the ORCHESTRATOR, not the converge agent — converge has been observed copying a
 // stray number (e.g. "171") from context it read into provenance.depth/agents. DEPTH + the real count win.
-converged.provenance = { method:'Goldratt CRT', ...(converged.provenance||{}), depth: DEPTH /*, agents: <real count if tracked> */ }
+converged.provenance = { method:'Goldratt CRT', ...(converged.provenance||{}), depth: DEPTH, ...(IDEA ? { mode:'idea-audit', quarantine:'asserted' } : {}) /*, agents: <real count if tracked> */ }
 converged.apexType = APEX_TYPE
 
 // 7d) VERDICT STATUS — bind the headline's confidence to the census. Field lesson: the census honestly said
@@ -518,6 +562,71 @@ if (LEVER_MODE) {
   if (lev) { converged.levers = lev.levers || []; converged.sizing = lev.sizing || null }
 }
 
+// 7b²) IDEA FIT-CHECK — IDEA AUDIT ONLY. The finished tree finally meets the quarantined idea. Field
+//      origin (2026-07): a user brought a product idea; the tree — run on the problem the idea presupposed —
+//      located a policy/ownership constraint the tool couldn't touch, and the honest kill itself needed
+//      grading (the WTP call is a hypothesis with a test, not a pronouncement). Two agents: map the idea
+//      onto the tree, then one skeptic attacks the fit verdict itself. Runs BEFORE narrate so the memo
+//      can state the idea verdict in plain words. In TEST_PLAN the fit-check is DEFERRED, not skipped —
+//      a fit verdict over an unsettled map rests on hypotheses; tell the user it fires in the Phase-6
+//      loop once the decisive tests come back. (Scout-gate ship-direct: run this same pair against the
+//      scout consensus {constraint, decisiveEvidence} instead of a full tree.)
+if (IDEA) converged.idea = IDEA            // persist the question UNCONDITIONALLY — a dead fit agent or a
+                                           // test-plan run must never silently delete what the user asked
+if (IDEA && TEST_PLAN) {
+  converged.ideaFitDeferred = 'test-plan: the fit-check fires in the Phase-6 loop once the decisive tests land — a fit verdict over an unsettled map would rest on hypotheses'
+  log('ℹ Idea Audit × Test-plan: fit-check DEFERRED to the update loop (idea saved in the output JSON).')
+}
+if (IDEA && !TEST_PLAN) {
+  phase('Idea fit')
+  const fit = await agent(
+    `A finished, evidence-graded Why Tree is below. Now judge this IDEA against it — the idea was deliberately ` +
+    `hidden from the agents that built the tree, so the tree owes it nothing.\nIDEA: ${JSON.stringify(IDEA)}\n` +
+    `TREE: ${JSON.stringify({ roots:converged.roots, constraint:converged.constraint, stages:converged.stages, negatives:converged.negatives })}\n` +
+    `Emit ideaFit: 1) addresses:[REAL node ids the idea would actually change]. 2) verdict — dissolves-constraint ` +
+    `(removes/moves the located constraint) | relieves-symptom (real nodes, not the constraint) | misses-constraint ` +
+    `(refuted/peripheral nodes) | negative-branch (run the idea forward like any fix — it would backfire). 3) why + ` +
+    `restsOn:[the real node ids the verdict stands on]; a check standing on DIFFERENT nodes than the verdict carries its ` +
+    `own restsOn. 4) policyToolMismatch — if the constraint is POLICY/ownership and ` +
+    `the idea is a TOOL that leaves ownership untouched, flag it: a tool cannot dissolve a policy constraint. 5) absorbedPain — ` +
+    `acute (escalating, budgeted-to-fix) vs chronic-absorbed (the system built compensating routines; the cost was internalized ` +
+    `years ago → low willingness-to-pay even when the pain is real and widespread) vs unknown; this is a GRADED claim ` +
+    `(kind/grade/cite, usually a HYPOTHESIS with gap:'experiment') plus the TEST that would settle it (pre-sell, budget-line ` +
+    `check, adjacent purchases) — NEVER an ungraded pronouncement. 6) segmentFork — this tree diagnosed ONE system: where does ` +
+    `the idea die / where might it live (kind HYPOTHESIS, gap external, + test)? 7) redirect — what WOULD dissolve the ` +
+    `constraint; the tree's reframed problem is the alternative idea space.`,
+    { label:'idea-fit', phase:'Idea fit', schema: IDEA_FIT_SCHEMA, effort:'high' })
+  if (!fit) {
+    converged.ideaFitError = 'IDEA FIT-CHECK FAILED — the fit agent died; the idea was never judged. Re-run via the Phase-6 idea-check.'
+    log('⚠ ' + converged.ideaFitError)
+  } else {
+    // Phantom-id REPAIR (mirror the loadBearing re-point, never log-and-ship): drop ids that don't exist,
+    // say so in `why`, and if the verdict's support empties out it is contested by construction.
+    const scrub = ids => (ids||[]).filter(id => allIds.has(id))
+    const dropped = [...(fit.addresses||[]), ...(fit.restsOn||[])].filter(id => !allIds.has(id))
+    fit.addresses = scrub(fit.addresses); fit.restsOn = scrub(fit.restsOn)
+    if (dropped.length) { fit.why += ` ⚠ ${dropped.length} supporting id(s) did not resolve and were dropped (${dropped.join(', ')}).`
+                          log(`⚠ idea-fit phantom id(s) dropped: ${dropped.join(', ')}`) }
+    // Fit skeptic — NO default-to-refute here: in a map-status tree the support is always thin, so that
+    // default would fire every run and an always-amber badge carries zero information. Thinness is already
+    // on the badge (verify-first); the skeptic must name a SPECIFIC error to kill.
+    const fitRefute = await agent(
+      `Try to REFUTE this idea-fit verdict — argue the side it did NOT take (a kill: could the idea in fact reach the ` +
+      `constraint, or live in a nearby segment? a pass: does the fit rest on refuted nodes or wishful sizing?). ` +
+      `Set refuted=true ONLY if you can name the specific node, segment, or mechanism the verdict got wrong — ` +
+      `thin evidence alone is NOT a refutation (the badge already shows it).\n` +
+      `ideaFit: ${JSON.stringify(fit)}\nConstraint: ${JSON.stringify(converged.constraint)}`,
+      { label:'refute:idea-fit', phase:'Idea fit', schema: VERDICT_SCHEMA })
+    // Record ALL THREE outcomes — the artifact must distinguish "attacked and lost" from "never attacked".
+    fit.refutation = fitRefute ? (fitRefute.refuted ? { contested: fitRefute.evidence }
+                                                    : { survived: fitRefute.evidence })
+                               : { skipped: 'fit skeptic failed to run — the verdict is UN-REFUTED' }
+    if (fit.refutation.contested) fit.contested = fit.refutation.contested   // keep BOTH sides visible
+    if (!fit.restsOn.length) { fit.contested = (fit.contested ? fit.contested + ' | ' : '') + 'every supporting node id failed to resolve — the verdict has no surviving evidence anchor' }
+    converged.ideaFit = fit
+  }
+}
+
 // 7c) NARRATE — turn the finished tree into a short memo a human reads FIRST (rendered at the TOP of the
 //     HTML so the artifact self-explains before anyone drills the tree). One cheap agent; plain prose.
 //     SKIPPED in test-plan mode ("no drill, no narrate, no HTML") — the orchestrator writes the markdown
@@ -529,7 +638,7 @@ const narr = await agent(
   `this memo first, then drills the tree for evidence. Full tree: ${JSON.stringify(converged)}.\n` +
   `Return {sections:[{heading, body}]} — 3 to 7 sections of plain prose (NOT bullets), each body 2-5 sentences, in this order: ` +
   `the problem (the apex in one line); what the evidence FORCES (the verdict/reframe); what we know (the load-bearing graded findings, de-whaled); ` +
-  `the binding constraint${LEVER_MODE ? ' AND the lever portfolio (which additive paths sum to the target, and the honest gap)' : ''}; ` +
+  `the binding constraint${LEVER_MODE ? ' AND the lever portfolio (which additive paths sum to the target, and the honest gap)' : ''}${converged.ideaFit ? '; the idea on trial (the fit verdict in plain words, its strongest counter-argument if contested, and the redirect)' : ''}; ` +
   `what to do / what NOT to do (the negative branches); and the honest risk (the loadBearing node + what flips if it is wrong${'' }${''}). ` +
   ((converged._refuteWarning||converged._measurableWarning) ? `Surface this caveat plainly: ${esc0(converged._refuteWarning||'')} ${esc0(converged._measurableWarning||'')}. ` : '') +
   `Match the tree exactly — do NOT invent facts or numbers not in it.`,
@@ -551,13 +660,14 @@ return converged
   - `isLoadBearing(branch)` — true if the branch is a plausible constraint candidate (not FRAMING, grade ≥ Mod, or flagged by ≥2 lenses). **CRITICAL: this reads the branch's TOP-LEVEL `kind`/`grade`/`lensCount` — the deepen agent MUST propagate those up to the returned branch node, not bury them only inside `children[]`. If it doesn't, `isLoadBearing` returns 0 for everything and the refute pass SILENTLY does nothing** (observed live). The refute-failure guard above turns that silence into a loud warning, but the real fix is propagating the metadata.
   - `NODE_TREE_SCHEMA` = a single branch object that REQUIRES top-level `kind`/`grade` (+ optional `lensCount`, + optional `gap` on HYPOTHESIS/CLAIM nodes, + optional `validation` on MEASURED nodes) and a recursive `children:[NODE]` (used by deepen + the constraint drill); `VERDICT_SCHEMA` = `{refuted:boolean, demote:boolean, evidence:string}`; `REGRADE_SCHEMA` = `{kind:enum(answer-kinds), grade:string, cite:string, gap?:enum('in-hand','external','experiment')}` (used by the measurable-in-hand guard's re-grade pass); `AUDIT_SCHEMA` = `{validation:enum('validated','contested','raw'), triangulated:boolean, secondValue?:string, discrepancy?:string, evidence:string}` (`validation` + `evidence` required — used by the measurement audit); `TREE_JSON_SCHEMA` = the strict schema above (its `roots[].children` is what makes the tree multi-level — do not drop it).
   - `LEVERS_SCHEMA` (target apex only) = `{levers:[{id, name, path, sizing:{volume, conversion, contribution, basis}, ownWinBuy:enum('own','win','buy'), effort:enum('low','med','high'), bindsConstraint?:boolean, role:enum('primary','secondary','dropped'), droppedReason?}], sizing:{target, byDate, sumOfLevers, gapToTarget, bottomLine}}` — `levers` + `sizing.bottomLine` required; every `dropped` lever MUST carry a `droppedReason` (the no-silent-suppression rule).
+  - `IDEA_FIT_SCHEMA` (idea audit only) = `{verdict:enum('dissolves-constraint','relieves-symptom','misses-constraint','negative-branch'), addresses:[string], why:string, restsOn:[string], policyToolMismatch:{flag:boolean, note}, absorbedPain:{state:enum('acute','chronic-absorbed','unknown'), kind:enum(answer-kinds), grade:enum('Strong','Mod','Weak'), cite, test, gap?, restsOn?:[string]}, segmentFork:{diesWhere, livesWhere, kind:enum(answer-kinds), gap, test, restsOn?:[string]}, redirect:{reframedProblem, whatWouldDissolve}}` — REQUIRED: `verdict` + `addresses` + `why` + `restsOn` at top level, **`absorbedPain` (with `state` + `kind` + `test`) and `segmentFork` (with `diesWhere` + `livesWhere` + `kind` + `test`)** — Guardrail 14 is enforced HERE, in the schema, not just in prose: an ungraded idea-kill must fail validation, not slip through as an optional field. A check standing on different nodes than the verdict carries its own `restsOn` (the orphan sweep reads both levels). `refutation` `{contested|survived|skipped}` is stamped by the orchestrator, never emitted by the fit agent.
   - `NARRATIVE_SCHEMA` = `{sections:[{heading, body}]}` (both required) — the top-of-HTML memo (3-7 short prose sections).
   - `esc0` = `s => (s||'').replace(/[`$]/g,' ')` — strips backticks/`$` so a warning string spliced into a template literal can't break it (used when passing `_refuteWarning`/`_measurableWarning` into the narrate prompt).
 - **The `gap` tag is the spine of the data-honesty model.** Every HYPOTHESIS/CLAIM node carries one: `in-hand` (one read over the Phase-1 sources settles it → the measurable-in-hand guard computes it and re-grades MEASURED; it must NEVER survive to the output), `external` (needs data we don't have), `experiment` (needs a test). `dataRequest[]` is built from the `external`/`experiment` gaps only — it's the "what I need from you to turn this map into a verdict" deliverable, the generalized ROI-pattern ("I lack the data, but here are the exact numbers that answer it"). Keep it distinct from `tests[]`: `tests[]` are fork-deciding experiments, `dataRequest[]` is the ranked missing-evidence ask (they may overlap; a `dataRequest` item may BE a cheapest-test). Interaction with the user happens only at the edges — the Phase-0 depth gate, the Phase-1 pre-flight data gate (+ interview-me), the Phase-1.5 scout-gate routing, and this Data Request / the Phase-6 test loop — never mid-run. (An `ask-owner` dataRequest item is just the `external`-gap flavor whose "source" is a person's head.)
 - **Standard** = 6 lenses, 1-vote refute, one-level deepen + measurement audit + constraint drill. **Deep** = 9 lenses, 3-vote refute, loop-until-dry + wider audit + constraint drill. **Test-plan** = 4 lenses, 1-vote refute, audit, NO drill — the deliverable is the branch-map + ranked cheapest-tests + Data Request as *markdown* (skip Phase 3's HTML machinery entirely); `verdictStatus` is forced to `map` because the decisive sources are human-only. (Quick was REMOVED — for a cheap gut-check, ask a single agent; this skill only earns its cost when one mind can confidently go wrong. Test-plan is not Quick: it's a different output *shape*, not a cheaper verdict.)
 - **The source registry rides inside `SOURCES`.** From Phase 1, include each source as `{id, tier: canonical|curated|raw, caveats}` in the SOURCES string, so lens/deepen agents can cite source ids and the audit agents know what counts as a second independent pipeline (and which source the business already trusts). The registry + cleanliness gate happen at the ORCHESTRATOR level before launch — zero agents; the audit pass only covers what the gate couldn't settle.
-- **Update re-entry (amend, don't re-derive).** When the user returns with test results, do NOT rerun this workflow. Load `why-tree-output.json`, re-grade the touched nodes in place (HYPOTHESIS→MEASURED with the new cite + `validation`; or `contested`; or role `REFUTED` with the killing evidence), recompute `census` + `verdictStatus` in plain code, run the **orphan sweep** (any action/negative whose `restsOn` includes a node that died or went contested is flagged ORPHANED — re-derive or retract, never leave it standing), and re-run ONLY the converge(+drill) step if the constraint's `loadBearing` node fell. 0-3 agents per loop. The anti-contamination rule (never read a prior verdict) applies to re-DERIVING a fresh tree, not to amending a live one.
-- **Apex type drives the output shape** (set `args.apexType` from Phase 0). `symptom` → the classic constraint tree (no lever stage). `target` ("hit N by date") → the same tree PLUS the lever-decomposition stage (`levers[]` + `sizing`): the additive paths to N, sized, so the verdict is "the bottleneck AND whether the levers sum to the number." The lever stage is **+2 agents** (decompose + the always-on narrate); it does not change the core agent count. The suppression rule (a lever may be `dropped` with a `droppedReason`, never silently cut) is the generalization of a real run that lost a whole growth lever when converge refuted everything down to one.
+- **Update re-entry (amend, don't re-derive).** When the user returns with test results, do NOT rerun this workflow. Load `why-tree-output.json`, re-grade the touched nodes in place (HYPOTHESIS→MEASURED with the new cite + `validation`; or `contested`; or role `REFUTED` with the killing evidence), recompute `census` + `verdictStatus` in plain code, run the **orphan sweep** (any action/negative/`ideaFit` claim whose `restsOn` includes a node that died or went contested is flagged ORPHANED — re-derive or retract, never leave it standing), and re-run ONLY the converge(+drill) step if the constraint's `loadBearing` node fell. 0-3 agents per loop. The anti-contamination rule (never read a prior verdict) applies to re-DERIVING a fresh tree, not to amending a live one. **Post-hoc idea-check re-entry:** on *"here's my idea — would it have helped?"* against a finished tree, load the saved JSON and run ONLY the 7b² fit-check pair (+2 agents) over it, then splice `idea` + `ideaFit` into the styled HTML and append the idea section to the decision doc — zero re-derivation. A saved JSON carrying `ideaFitDeferred` (a test-plan Idea Audit) means exactly this re-entry is OWED once the decisive tests land — the idea is already in the JSON; don't make the user re-supply it.
+- **Apex type drives the output shape** (set `args.apexType` from Phase 0). `symptom` → the classic constraint tree (no lever stage). `target` ("hit N by date") → the same tree PLUS the lever-decomposition stage (`levers[]` + `sizing`): the additive paths to N, sized, so the verdict is "the bottleneck AND whether the levers sum to the number." The lever stage is **+1 agent** (decompose; narrate is already in the core count's tail). **Idea Audit adds +2** (fit + fit-skeptic), also outside the core count. The suppression rule (a lever may be `dropped` with a `droppedReason`, never silently cut) is the generalization of a real run that lost a whole growth lever when converge refuted everything down to one.
 - **`narrative[]` runs for both apex types but is SKIPPED in test-plan mode** (+1 agent otherwise): a final memo the HTML renders at the top, so the single artifact explains itself before anyone opens the tree. In test-plan the orchestrator writes the markdown intro itself.
 - **Honest agent count** = lenses + deepen(≤`MAX_DEEPEN`) + audit(≤`MAX_AUDIT`) + refute(≤`MAX_REFUTE` × (`REFUTE_VOTES`+1)) + converge + drill + narrate. The **refute fan-out is the multiplier**: Standard ≈ **22-40**, Deep ≈ **32-60+**, Test-plan ≈ **10-18**. (A real Standard field run: 26 agents ≈ 833k output tokens, ~32k/agent.) The "~12-16 / ~25-30" figures in older docs predate the caps, the drill and the audit steps — SKILL.md's gate now quotes the realistic ranges. The caps bound the worst case (no 171-blowup); they don't make it cheap.
 - For data-grounded problems, name the file paths / DB tables explicitly in `SOURCES` so the deepen/refute agents read them (this is what produced real refutations like "6/6 sampled accounts had a 2nd seat" in the source case).

@@ -23,7 +23,11 @@ DATA_RE = re.compile(
 def build(name: str, data_json: str):
     # validate it's parseable JSON before injecting
     json.loads(data_json)
-    html = DATA_RE.sub(lambda m: m.group(1) + "\n" + data_json.strip() + "\n" + m.group(3), tpl)
+    # a literal "</script>" (or any "</") inside a JSON string terminates the tree-data block early
+    # and kills the whole artifact — escape as "<\/" (JSON-legal, HTML-safe). Same rule applies to
+    # ANY code that splices tree JSON into the rendered HTML (Phase 3 / Phase 6 update loop).
+    safe_json = data_json.strip().replace("</", "<\\/")
+    html = DATA_RE.sub(lambda m: m.group(1) + "\n" + safe_json + "\n" + m.group(3), tpl)
     out = OUT / f"{name}.html"
     out.write_text(html)
     print(f"  built  {out.relative_to(HERE.parent)}")

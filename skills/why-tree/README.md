@@ -1,8 +1,10 @@
 # Why Tree
 
-A heavyweight, **agentic** Goldratt Current-Reality Tree. Point it at a hard, contested problem and it fans **10-60 AI agents** across the problem's branch-space, **grades every node by the kind of evidence behind it** (MEASURED / INFERENCE / CLAIM / HYPOTHESIS …), **tries to refute its own load-bearing branches**, and **converges on the ONE system constraint** — plus the negative branches (fixes that backfire) and the single cheapest test that would fork-decide. Output: a self-contained **interactive HTML tree** (opening with a plain-prose narrative memo; a growth-*target* apex additionally gets a sized **lever portfolio**) + a one-page **decision doc**.
+A heavyweight, **agentic** Goldratt Current-Reality Tree. Point it at a hard, contested problem and it fans **tens of AI agents** (scout gate ~5 · Standard 22-40 · Deep 90-115 observed) across the problem's branch-space, **grades every node by the kind of evidence behind it** (MEASURED / INFERENCE / CLAIM / HYPOTHESIS …), **tries to refute its own load-bearing branches**, and **converges on the ONE system constraint** — plus the negative branches (fixes that backfire) and the single cheapest test that would fork-decide. Output: a self-contained **interactive HTML tree** (opening with a plain-prose narrative memo; a growth-*target* apex additionally gets a sized **lever portfolio**) + a one-page **decision doc**.
 
 This is the **"build the evidence and find the wall"** move. Its siblings: `/constraint-finder` is the lightweight coach that returns Goldratt's **5 Focusing Steps** once you already know the constraint; `/triz-dissolve` is the **"move the wall"** move. The natural chain is **why-tree → constraint-finder**: this skill *locates and evidences* the constraint on a messy problem; constraint-finder tells you what to *do* about it.
+
+It also runs an **Idea Audit** (CRT→FRT: a solution is an *injection*, judged against the tree, never against the symptom). Bring a product idea — "I want to build X, would it work?" — and the skill inverts it: diagnoses the problem the idea *presupposes* (with the idea quarantined from the swarm, so the tree isn't built to flatter the pitch), then fit-checks the idea against the located constraint. Does it dissolve the constraint or just relieve a symptom? Is the constraint a policy an ownership-neutral tool can't touch? Has the buyer *absorbed* the pain as a cost of doing business (a graded low-WTP hypothesis with its pre-sell test attached — never an ungraded kill)? Plus the **segment fork** — where the idea dies vs where it might live (an n=1 diagnosis is ICP selection, not a market verdict) — and the **redirect**: what *would* dissolve the constraint. Scope is deliberately narrow: the fit of one idea to one diagnosed system; market sizing and competition are out of scope. Also works post-hoc on a finished tree (`why-tree idea-check`, +2 agents).
 
 > **5-Whys grown up.** Naive root-causing follows a single thread, stops at the first plausible cause, and cites nothing. A Why Tree searches the *whole* branch-space in parallel, grades every node, refutes before it trusts, and forces convergence to one constraint. If you ship five co-equal "root causes," a tidy single-thread chain, or a confident verdict built on unmeasured nodes — you did it wrong.
 
@@ -17,7 +19,7 @@ Unlike the other skills in this repo, why-tree's **engine is multi-agent** — i
 - `references/answer-kinds.md` — the evidence taxonomy + grading rubric + citation rules (the core of the rigor).
 - `references/workflow-template.md` — the copy-paste `Workflow` blueprint + the strict tree-JSON schema.
 - `assets/tree-template.html` — the reusable interactive visualization ("The Diagnostician's Bench").
-- `assets/sample-tree.html` — a non-confidential worked example (synthetic SaaS).
+- `assets/sample-tree.html` — a non-confidential worked example (synthetic SaaS). **Predates the lever + idea panels — copy the TEMPLATE, not this sample.**
 - `council-viz-design.md` — the 5-voice design rationale for the visualization (Goldratt / Feynman / Tufte / Victor / Minto).
 - `tests/` — a zero-token plumbing harness + fixtures.
 - `PROMPT.md` — the degraded single-context version for ChatGPT / Claude.ai / Cursor.
@@ -48,7 +50,8 @@ Multi-agent and token-heavy by design. **Standard ≈ 22-40 agents (~0.8-2.0M to
 - **The headline may not outrun the census.** `verdictStatus:'map'` renders an amber working-hypothesis banner in the header itself, naming the deciding test.
 - **Refute before trust.** Load-bearing branches face an independent adversarial pass; killed branches stay visible *with the evidence that killed them*. (A degraded/skipped refute pass is the most dangerous failure — the engine warns loudly if it runs on zero branches.)
 - **Converge to ONE.** 3-5 roots, one located system constraint — often a **policy/ownership** problem wearing a tooling costume.
-- **The apex is a STATEMENT, not a question**, and never a smuggled solution ("why don't we have feature Y" biases the whole tree).
+- **The apex is a STATEMENT, not a question**, and never a smuggled solution ("why don't we have feature Y" biases the whole tree) — but an idea brought *for evaluation* routes to Idea Audit, it isn't refused.
+- **The idea is quarantined.** In Idea Audit mode the pitch never enters a scout/lens/deepen/refute prompt or the frozen evidence brief; only the post-converge fit-check sees it — and the idea-kill is graded like any claim (WTP is a hypothesis with a test, not a pronouncement).
 - **Honest census.** If the decisive nodes are still HYPOTHESIS, the headline is "a map of where to look, not a verdict," and the cheapest test targets exactly those nodes.
 - **The tree must be a multi-LEVEL tree** — the constraint branch drills to bedrock as a visible chain, not a one-line root.
 
@@ -62,3 +65,4 @@ Multi-agent and token-heavy by design. **Standard ≈ 22-40 agents (~0.8-2.0M to
 - Smuggling the answer into the apex (a problem framed as a missing solution).
 - A MEASURED chip on an unaudited pipeline — bots in the denominator, a metric-definition mismatch, or a seasonal Δ shipped as a "fact" (a field run burned 4 of 6 iterations debunking exactly these).
 - An act-ready verdict header on a tree whose constraint rests on an untested node.
+- Killing (or blessing) a product idea at the symptom level — the Idea Audit judges the idea against the located constraint, and generalizes an n=1 tree only via an explicit segment fork.
