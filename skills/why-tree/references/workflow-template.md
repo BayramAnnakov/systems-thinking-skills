@@ -519,8 +519,16 @@ converged.apexType = APEX_TYPE
 let _lb = null
 ;(function findLB(ns){ (ns||[]).forEach(n => { if (n && n.id === (converged.constraint||{}).loadBearing) _lb = n; if (n) findLB(n.children) }) })(
   [...(converged.stages||[]).flatMap(s=>s.nodes||[]), ...(converged.roots||[]).flatMap(r=>r.children||[])])
+// A tree with ZERO MEASURED nodes can never be a verdict, whatever the loadBearing node's kind —
+// field run 2026-07-08: an INFERENCE/Mod loadBearing slipped past the kind checks and computed
+// 'verdict' on a 0%-MEASURED tree ("located by argument, not by data"); the CLR audit had to
+// correct it by hand. Guardrails 5 + 10 govern.
+let _hasMeasured = false
+;(function scanHM(ns){ (ns||[]).forEach(n => { if (n && n.kind === 'MEASURED') _hasMeasured = true; if (n) scanHM(n.children) }) })(
+  [...(converged.stages||[]).flatMap(s=>s.nodes||[]), ...(converged.roots||[]).flatMap(r=>r.children||[])])
 const _lbWeak = !_lb || ['HYPOTHESIS','CLAIM'].includes(_lb.kind) ||
-                (_lb.kind === 'MEASURED' && ['raw','contested'].includes(_lb.validation || 'raw'))   // unaudited = raw = map, deliberately
+                (_lb.kind === 'MEASURED' && ['raw','contested'].includes(_lb.validation || 'raw')) ||   // unaudited = raw = map, deliberately
+                !_hasMeasured
 converged.verdictStatus = (_lbWeak || refuteWarning || measurableWarning || TEST_PLAN) ? 'map' : 'verdict'
 
 // 7d²) CENSUS COUNTS — same rule as verdictStatus: arithmetic over the FINAL tree, never the converge
