@@ -55,7 +55,7 @@ End: "Answer what you know; mark anything as 'unsure' and we'll proceed."
 After the user answers:
 
 1. **Grammar validation** — for each entity: stock or flow? Do units match? Flag any flow named as a stock and any stock named as a flow. 1–2 sentences.
-2. **Implicit assumptions** (3–5) — "Assumption: <X>. Reality: <Y>." Linearity vs. thresholds, independence vs. coupling, constants vs. functions.
+2. **Implicit assumptions** (3–5) — "Assumption: <X>. Alternative hypothesis: <Y> (a hypothesis, not a fact). Evidence that would decide: <Z>." Focus on linearity vs. thresholds, independence vs. coupling, constants vs. functions. Never state a mechanism, number or percentage the user did not give as fact: label it a hypothesis and name what would confirm it.
 3. **Archetype matching** — run the decision tree (below) internally to narrow the field; do NOT march the user through every archetype. Present the single best match (or two only if it is a genuine toss-up): "Match: <archetype>, confidence <high|medium|low>" + canonical structure mapped onto user's variables. Name the runner-up in one line only if close. OR "No clear archetype" + what is missing. Do not force-fit.
 
 End: "Does this match your intuition? Want to dive into leverage and trajectory, or pause to revise?"
@@ -346,11 +346,11 @@ flowchart LR
 **1. Validation.** Stock OK (count). Inflow clients/mo OK. Outflow OK. With WoM = f(stock), the R-loop is well-formed.
 
 **2. Assumptions.**
-- Every client refers equally → reality: 20/80 distribution.
-- Capacity is constant → reality: expandable via hiring with 2-3 mo delay.
-- Quality drops linearly with load → reality: threshold effect (>80% load = collapse).
-- Word-of-mouth is independent of quality → reality: bad quality = anti-WoM.
-- No competition → reality: AI accounting can cut inflow 50-70%.
+- Every client refers equally → alternative hypothesis: a few clients bring most referrals. Evidence: referral source per new client.
+- Capacity is constant → alternative hypothesis: capacity grows with hiring, after a ramp-up delay. Evidence: how long a new hire takes to carry a full load.
+- Quality drops linearly with load → alternative hypothesis: quality holds, then drops past a threshold. Evidence: error or complaint rate at different load levels.
+- Word-of-mouth is independent of quality → alternative hypothesis: bad experiences turn into negative word of mouth. Evidence: churn and referral rate by service quality.
+- No competition → alternative hypothesis: an alternative (e.g. AI tools) takes part of the inflow. Evidence: lost deals and their stated reasons.
 
 **3. Archetype: Limits to Growth, high confidence.** R dominates first 4-6 mo → B (capacity) catches up → plateau. Not Shifting the Burden (no quick-fix vs. fundamental pair). Not Fixes that Fail. Watch the boundary with Growth & Underinvestment: if Stanislav actively chooses not to hire ahead of demand (a capacity-investment loop gated on past load), it tips into G&U — the 3-mo hiring delay is the tell.
 
