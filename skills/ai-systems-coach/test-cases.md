@@ -1,6 +1,6 @@
 # Test Cases - Systems Coach Skill
 
-Three cases that exercise the skill's main paths: a textbook archetype, a subtler archetype, and a refusal. Use these to validate the skill before W2 and to demo the failure modes during W2.
+Six cases that exercise the skill's main paths: a textbook archetype, a subtler archetype, a refusal, and the no-loop / with-loop / express paths (cases 4-6, from cohort-2 homework). Use these to validate the skill before W2 and to demo the failure modes during W2.
 
 ---
 
@@ -158,7 +158,7 @@ graph LR
 
 (1) название stock и его единицы (например, "клиенты, шт")
 (2) хотя бы один inflow или outflow с единицей stock/время (например, "новые клиенты/мес")
-(3) хотя бы одна петля обратной связи (R или B) словами (например, "клиенты → нагрузка → качество → отток")
+(3) петля обратной связи (R или B) словами, если она уже есть (например, "клиенты → нагрузка → качество → отток"); «пока нет» тоже ответ
 
 Сейчас не хватает: stock-имени и единиц, явных flows, и петель обратной связи. У тебя в описании есть наброски: "клиенты", "сотрудники", "качество", "выгорание" - но не указано, что из этого накапливается (stock), а что движется (flow), и как они влияют друг на друга через циклы.
 
@@ -168,8 +168,7 @@ graph LR
 - Stock: <имя> (<нач. значение>, <единица>)
 - Inflow: <имя> (<единица: stock/время>)
 - Outflow: <имя>
-- R: <переменная> → <переменная> → <переменная>
-- B: <переменная> → <переменная> → <переменная>
+- Петля (если есть): <переменная> → <переменная> → <переменная>
 
 Я разберу.
 ```
@@ -180,6 +179,68 @@ graph LR
 - AI must NOT give generic systems thinking advice ("подумай о feedback loops...") without the refusal first. The refusal is the teaching moment.
 - AI must give a concrete template, not just "пришли структурированный вход".
 - If the AI's refusal is longer than the analysis - that's a fail. Refusal should be ~150-200 words, with a fillable template.
+
+---
+
+## Test Case 4 - No loop yet (cohort-2 homework, speech-recognition team)
+
+Participants drew the stock and flows before loops were taught. The skill must start, not refuse.
+
+### Input
+
+```
+Запас: гипотезы, ожидающие проверки. Втекает: формулирование новых гипотез. Вытекает: завершение проверки. Проверка занимает время: подготовить эксперимент, обучить алгоритм, оценить результат. Петля: пока нет.
+```
+
+### Expected output (one answer, ≤200 words, default and «экспресс-режим» alike)
+
+- **Grammar check:** stock passes the bathtub test; both flows are rates (гипотез/нед), units match; «Проверка занимает время…» is a **delay**, not a flow. Flags any flow named as a stock (none here) - no invented problem.
+- **Archetype: пока нет** - cannot be identified without a loop.
+- **ONE loop question** in the user's terms: does «гипотезы, ожидающие проверки» affect «формулирование» or «завершение проверки»?
+
+### Pushback expected
+
+- Refusing or demanding a loop before any critique - fail.
+- Naming an archetype as a match - fail.
+- Supplying the loop for the user - fail.
+
+---
+
+## Test Case 5 - Same diagram plus a loop
+
+### Input
+
+Case 4 with `Петля: пока нет.` replaced by:
+
+```
+Петля: чем больше проверенных гипотез, тем лучше понимание ошибок, тем больше новых гипотез.
+```
+
+### Expected output
+
+- **Default:** Phase A - 1-3 clarifying questions. The highest-value one: «проверенные гипотезы» is the accumulated outflow, i.e. a second stock not on the diagram, or the outflow rate itself?
+- **Phase B (after answers):** one R loop, no B loop → **«явного архетипа нет»** or «Пределы роста» at low/medium confidence only if the user names a capacity limit. High confidence on any archetype - fail.
+
+---
+
+## Test Case 6 - Express phrase
+
+Prepend `экспресс-режим` as the first line of Case 4 or Case 5.
+
+### Expected output
+
+One answer, no waiting: clarifying questions restated as one-line assumptions, then grammar + assumptions + archetype (Case 5) or the no-loop answer (Case 4), ending with 1-2 questions that would change the verdict. No Phase C. ≤300 words.
+
+### Measured (15 Oct 2026, `claude -p`, Opus 5.5, PROMPT.md as first message, 6 runs)
+
+| run | started | stock/flow critique | archetype |
+|---|---|---|---|
+| Case 4 default ×2 | yes | yes - delay ≠ flow; stock boundary «ожидающие» vs «завершение» | «пока нет» ×2 |
+| Case 5 default ×2 | yes (Phase A) | questions only; both ask whether the loop's variable is a second stock | not yet (Phase A) |
+| Case 4 express | yes | yes, same as default | «пока нет» |
+| Case 5 express | yes | yes - loop starts from «проверенные гипотезы», an unnamed second stock | «явного нет»; Пределы роста only if user names a B loop |
+
+Global `~/.claude/CLAUDE.md` was still loaded in these runs - not a clean slate.
 
 ---
 
